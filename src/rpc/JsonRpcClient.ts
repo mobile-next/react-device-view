@@ -75,6 +75,13 @@ export class JsonRpcClient {
       return;
     }
 
+    // JWTs have 3 dot-separated parts — anything else is already a session token
+    const isJwt = this.authToken.split('.').length === 3;
+    if (!isJwt) {
+      this.sessionToken = this.authToken;
+      return;
+    }
+
     const url = new URL(this.url);
     const protocol = (url.protocol === 'wss:' || url.protocol === 'https:') ? 'https:' : 'http:';
     const authUrl = `${protocol}//${url.host}/auth/token`;
