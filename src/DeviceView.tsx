@@ -258,44 +258,46 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
   useEffect(() => {
     if (!jsonRpcClientRef.current || !deviceId) return;
 
-    if (streamingDeviceIdRef.current === deviceId) return;
+    let cancelled = false;
 
     stopStream();
     streamingDeviceIdRef.current = deviceId;
 
     const client = getDeviceClient();
 
-    // Get device info for screen size and skin
     client.getDeviceInfo().then((result) => {
-      if (result?.device) {
-        screenSizeRef.current = result.device.screenSize;
+      if (cancelled || !result?.device) return;
 
-        const descriptor: DeviceDescriptor = {
-          id: result.device.id,
-          name: result.device.name,
-          platform: result.device.platform as DevicePlatform,
-          type: result.device.type as DeviceType,
-        };
+      screenSizeRef.current = result.device.screenSize;
 
-        setSelectedDevice(descriptor);
-        setDeviceSkin(getDeviceSkinForDevice(descriptor));
+      const descriptor: DeviceDescriptor = {
+        id: result.device.id,
+        name: result.device.name,
+        platform: result.device.platform as DevicePlatform,
+        type: result.device.type as DeviceType,
+      };
 
-        // Determine format
-        let format: ScreenCaptureFormat = 'mjpeg';
-        if (descriptor.platform === DevicePlatform.ANDROID) {
-          format = 'avc';
-        } else if (descriptor.platform === DevicePlatform.IOS && descriptor.type === DeviceType.REAL) {
-          format = 'avc';
-        }
+      setSelectedDevice(descriptor);
+      setDeviceSkin(getDeviceSkinForDevice(descriptor));
 
+      let format: ScreenCaptureFormat = 'mjpeg';
+      if (descriptor.platform === DevicePlatform.ANDROID) {
+        format = 'avc';
+      } else if (descriptor.platform === DevicePlatform.IOS && descriptor.type === DeviceType.REAL) {
+        format = 'avc';
+      }
+
+      if (!cancelled) {
         startStream(deviceId, format);
       }
     }).catch((error) => {
+      if (cancelled) return;
       console.error('device-view: failed to get device info:', error);
       onError?.(error instanceof Error ? error : new Error(String(error)));
     });
 
     return () => {
+      cancelled = true;
       stopStream();
     };
   }, [deviceId, jsonRpcClientRef.current]);

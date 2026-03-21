@@ -174,6 +174,11 @@ export class WebRtcStream {
 		const startTime = Date.now();
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
+			if (!this.isActive) {
+				console.log('webrtc: stream stopped, aborting retry loop');
+				throw new Error('WebRTC stream stopped');
+			}
+
 			try {
 				if (attempt > 1) {
 					console.log(`webrtc: retry attempt ${attempt}/${maxRetries} (elapsed: ${Date.now() - startTime}ms)`);
