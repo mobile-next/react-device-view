@@ -122,6 +122,7 @@ export const DeviceViewport: React.FC<{
     setGestureState(emptyGestureState);
   };
 
+  const borderRadius = deviceSkin.imageFilename ? `${deviceSkin.borderRadius * skinRatio}px` : undefined;
   const streamStyle: React.CSSProperties = {
     cursor: 'crosshair',
     width: '100%',
@@ -129,7 +130,7 @@ export const DeviceViewport: React.FC<{
     objectFit: 'cover',
     maxHeight: 'calc(100vh - 100px)',
     maxWidth: 'calc(100vw - 2em)',
-    borderRadius: `${deviceSkin.borderRadius * skinRatio}px`
+    borderRadius
   };
 
   return (
