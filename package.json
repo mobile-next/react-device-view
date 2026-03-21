@@ -12,13 +12,17 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "skins"],
+  "files": [
+    "dist",
+    "skins"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
+    "example": "vite",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
@@ -26,18 +30,27 @@
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "typescript": "^5.8.0",
     "tsup": "^8.0.0",
-    "vitest": "^3.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "typescript": "^5.8.0",
+    "vite": "^8.0.1",
+    "vitest": "^3.0.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/mobile-next/device-view.git"
   },
   "license": "MIT",
-  "keywords": ["react", "device", "streaming", "webrtc", "mobile", "remote-control"]
+  "keywords": [
+    "react",
+    "device",
+    "streaming",
+    "webrtc",
+    "mobile",
+    "remote-control"
+  ]
 }
