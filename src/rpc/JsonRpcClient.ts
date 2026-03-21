@@ -329,6 +329,10 @@ export class JsonRpcClient {
     return this.sendViaWebSocket<T>(method, params, timeoutMs);
   };
 
+  public get isDisconnected(): boolean {
+    return this.wsState === ConnectionState.DISCONNECTED || this.wsState === ConnectionState.FAILED;
+  }
+
   public disconnect(): void {
     if (this.ws) {
       this.ws.close();

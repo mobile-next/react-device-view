@@ -47,7 +47,7 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
   const jsonRpcClientRef = useRef<JsonRpcClient | null>(null);
 
   const getOrCreateClient = (): JsonRpcClient => {
-    if (!jsonRpcClientRef.current) {
+    if (!jsonRpcClientRef.current || jsonRpcClientRef.current.isDisconnected) {
       jsonRpcClientRef.current = new JsonRpcClient(serverUrl, undefined, token);
     }
     return jsonRpcClientRef.current;
