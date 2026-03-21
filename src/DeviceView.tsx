@@ -43,6 +43,7 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const imageBitmapRef = useRef<ImageBitmap | null>(null);
   const streamingDeviceIdRef = useRef<string | null>(null);
+  const streamGenerationRef = useRef(0);
   const jsonRpcClientRef = useRef<JsonRpcClient | null>(null);
 
   // Create JSON-RPC client
@@ -160,12 +161,17 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
   };
 
   const startStream = async (devId: string, format: ScreenCaptureFormat) => {
+    const generation = streamGenerationRef.current;
+
     try {
       setDeviceState(DeviceState.CONNECTING);
 
       const scale = format === 'avc' ? 0.5 : undefined;
       const client = getDeviceClient();
       const response = await client.screenCaptureStart(format, scale);
+
+      // Bail if a newer stream was started while we were waiting
+      if (generation !== streamGenerationRef.current) return;
 
       const handleStreamError = (error: Error) => {
         console.error(`device-view: error from ${format} stream:`, error);
@@ -237,6 +243,7 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
   };
 
   const stopStream = () => {
+    streamGenerationRef.current++;
     streamingDeviceIdRef.current = null;
 
     if (mjpegStreamRef.current) { mjpegStreamRef.current.stop(); mjpegStreamRef.current = null; }
