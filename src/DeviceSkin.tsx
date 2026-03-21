@@ -20,7 +20,7 @@ export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({
 }) => {
   if (!skinOverlayUri) {
     return (
-      <div style={{ position: 'relative', borderRadius: `${deviceSkin.borderRadius}px` }}>
+      <div style={{ position: 'relative' }}>
         {children}
       </div>
     );
