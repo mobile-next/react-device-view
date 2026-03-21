@@ -338,9 +338,11 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
     );
   }
 
-  const skinOverlayUri = skinsUrl
+  const hasSkins = !!skinsUrl;
+  const skinOverlayUri = hasSkins
     ? `${skinsUrl}/${deviceSkin.imageFilename}`
     : '';
+  const activeSkin = hasSkins ? deviceSkin : NoDeviceSkin;
 
   return (
     <DeviceInstance
@@ -350,7 +352,7 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
       selectedDevice={selectedDevice}
       screenSize={screenSizeRef.current}
       skinOverlayUri={skinOverlayUri}
-      deviceSkin={deviceSkin}
+      deviceSkin={activeSkin}
       streamMode={streamMode}
       videoRef={videoRef}
       onTap={handleTap}
