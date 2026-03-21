@@ -46,19 +46,15 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
   const streamGenerationRef = useRef(0);
   const jsonRpcClientRef = useRef<JsonRpcClient | null>(null);
 
-  // Create JSON-RPC client
-  useEffect(() => {
-    jsonRpcClientRef.current = new JsonRpcClient(serverUrl, undefined, token);
-    return () => {
-      jsonRpcClientRef.current?.disconnect();
-    };
-  }, [serverUrl, token]);
+  const getOrCreateClient = (): JsonRpcClient => {
+    if (!jsonRpcClientRef.current) {
+      jsonRpcClientRef.current = new JsonRpcClient(serverUrl, undefined, token);
+    }
+    return jsonRpcClientRef.current;
+  };
 
   const getDeviceClient = (): DeviceClientApi => {
-    if (jsonRpcClientRef.current) {
-      return new DeviceClient(jsonRpcClientRef.current, deviceId);
-    }
-    return createNoOpDeviceClient();
+    return new DeviceClient(getOrCreateClient(), deviceId);
   };
 
   // Device interaction hook
@@ -263,7 +259,7 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
 
   // Main effect: fetch device info and start streaming
   useEffect(() => {
-    if (!jsonRpcClientRef.current || !deviceId) return;
+    if (!deviceId) return;
 
     let cancelled = false;
 
@@ -307,11 +303,17 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
       cancelled = true;
       stopStream();
     };
-  }, [deviceId, jsonRpcClientRef.current]);
+  }, [deviceId, serverUrl, token]);
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => { stopStream(); };
+    return () => {
+      stopStream();
+      if (jsonRpcClientRef.current) {
+        jsonRpcClientRef.current.disconnect();
+        jsonRpcClientRef.current = null;
+      }
+    };
   }, []);
 
   if (!selectedDevice) {
