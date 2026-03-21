@@ -264,9 +264,13 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
     let cancelled = false;
 
     stopStream();
+
+    // Create a fresh client for this effect — immune to StrictMode cleanup races
+    const rpcClient = new JsonRpcClient(serverUrl, undefined, token);
+    jsonRpcClientRef.current = rpcClient;
     streamingDeviceIdRef.current = deviceId;
 
-    const client = getDeviceClient();
+    const client = new DeviceClient(rpcClient, deviceId);
 
     client.getDeviceInfo().then((result) => {
       if (cancelled || !result?.device) return;
@@ -302,18 +306,17 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
     return () => {
       cancelled = true;
       stopStream();
+      // Disconnect only if this effect's client is still the active one
+      if (jsonRpcClientRef.current === rpcClient) {
+        rpcClient.disconnect();
+        jsonRpcClientRef.current = null;
+      }
     };
   }, [deviceId, serverUrl, token]);
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      stopStream();
-      if (jsonRpcClientRef.current) {
-        jsonRpcClientRef.current.disconnect();
-        jsonRpcClientRef.current = null;
-      }
-    };
+    return () => { stopStream(); };
   }, []);
 
   if (!selectedDevice) {
