@@ -7,7 +7,7 @@ type DeviceInfo = {
   id: string;
   name: string;
   platform: string;
-  status: string;
+  state: string;
   model: string;
   provider?: { type: string; sessionId?: string };
 };
@@ -81,7 +81,7 @@ function DeviceList({ serverUrl, token, onSelectDevice }: {
     const client = new JsonRpcClient(serverUrl, undefined, token);
     client.sendJsonRpcRequest<{ devices: DeviceInfo[] }>('devices.list', {})
       .then((result) => {
-        const online = (result.devices || []).filter(d => d.status === 'online');
+        const online = (result.devices || []).filter(d => d.state === 'online');
         setDevices(online);
       })
       .catch(err => setError(err.message))
@@ -135,7 +135,7 @@ function DeviceList({ serverUrl, token, onSelectDevice }: {
               {device.platform} &middot; {device.model} &middot; {device.id.slice(0, 8)}...
             </div>
           </div>
-          <span style={{ color: '#30a46c', fontSize: '12px' }}>{device.status}</span>
+          <span style={{ color: '#30a46c', fontSize: '12px' }}>{device.state}</span>
         </button>
       ))}
     </div>
