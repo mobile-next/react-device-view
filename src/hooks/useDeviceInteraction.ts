@@ -56,28 +56,42 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
     }
   };
 
-  const handleKeyDown = async (text: string) => {
-    if (text === 'Enter') text = "\n";
-    else if (text === 'Backspace') text = "\b";
-    else if (text === 'Delete') text = "\d";
-    else if (text === ' ') text = " ";
-    else if (text === 'Shift' || text === 'Meta') return;
+  const handleKeyDown = async (key: string) => {
+    const keyMap: Record<string, string> = {
+      'Enter': '\n',
+      'Backspace': '\b',
+      'Delete': '\x7F',
+      ' ': ' ',
+    };
+
+    let text: string;
+    if (keyMap[key] !== undefined) {
+      text = keyMap[key];
+    } else if (key.length === 1) {
+      text = key;
+    } else {
+      return;
+    }
 
     pendingKeys.current += text;
     setTimeout(() => flushPendingKeys(), 500);
+  };
+
+  const logButtonError = (error: unknown) => {
+    console.error('device-view: error pressing button:', error);
   };
 
   const pressButton = async (button: ButtonType) => {
     await deviceClient.pressButton(button);
   };
 
-  const onHome = () => { pressButton('HOME'); };
-  const onBack = () => { pressButton('BACK'); };
-  const onAppSwitch = () => { pressButton('APP_SWITCH'); };
-  const onPower = () => { pressButton('POWER'); };
-  const onRotateDevice = () => { console.log('Rotate device requested'); };
-  const onIncreaseVolume = () => { pressButton('VOLUME_UP'); };
-  const onDecreaseVolume = () => { pressButton('VOLUME_DOWN'); };
+  const onHome = () => { pressButton('HOME').catch(logButtonError); };
+  const onBack = () => { pressButton('BACK').catch(logButtonError); };
+  const onAppSwitch = () => { pressButton('APP_SWITCH').catch(logButtonError); };
+  const onPower = () => { pressButton('POWER').catch(logButtonError); };
+  const onRotateDevice = () => { console.log('device-view: rotate device requested'); };
+  const onIncreaseVolume = () => { pressButton('VOLUME_UP').catch(logButtonError); };
+  const onDecreaseVolume = () => { pressButton('VOLUME_DOWN').catch(logButtonError); };
 
   const getScreenshotFilename = (device: DeviceDescriptor) => {
     return `screenshot-${device.name}-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
