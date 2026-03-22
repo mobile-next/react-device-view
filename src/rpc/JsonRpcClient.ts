@@ -59,6 +59,7 @@ export class JsonRpcClient {
   private maxReconnectAttempts = 0;
   private reconnectDelay = 1000;
   private messageQueue: Array<{ method: string; params: any; id: number }> = [];
+  private connectionListeners: Array<(state: ConnectionState) => void> = [];
   private logger: Logger;
   private sessionToken?: string;
 
@@ -109,7 +110,6 @@ export class JsonRpcClient {
     const url = new URL(this.url);
     const protocol = (url.protocol === 'https:' || url.protocol === "wss:") ? 'wss:' : 'ws:';
     let wsUrl = `${protocol}//${url.host}/ws`;
-    this.logger.info("Converted " + this.url + " => " + wsUrl);
 
     if (this.sessionToken) {
       wsUrl += `?token=${this.sessionToken}`;
@@ -149,19 +149,27 @@ export class JsonRpcClient {
   }
 
   private waitForConnection(): Promise<void> {
+    if (this.wsState === ConnectionState.CONNECTED) return Promise.resolve();
+    if (this.wsState === ConnectionState.FAILED) return Promise.reject(new ConnectionError('websocket connection failed'));
+
     return new Promise((resolve, reject) => {
-      const checkInterval = setInterval(() => {
-        if (this.wsState === ConnectionState.CONNECTED) {
-          clearInterval(checkInterval);
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        this.removeConnectionListener(listener);
+      };
+
+      const listener = (state: ConnectionState) => {
+        if (state === ConnectionState.CONNECTED) {
+          cleanup();
           resolve();
-        } else if (this.wsState === ConnectionState.FAILED) {
-          clearInterval(checkInterval);
+        } else if (state === ConnectionState.FAILED) {
+          cleanup();
           reject(new ConnectionError('websocket connection failed'));
         }
-      }, 50);
+      };
 
-      setTimeout(() => {
-        clearInterval(checkInterval);
+      const timeoutId = setTimeout(() => {
+        this.removeConnectionListener(listener);
         if (this.wsState !== ConnectionState.CONNECTED) {
           this.wsState = ConnectionState.FAILED;
           if (this.ws) {
@@ -171,7 +179,23 @@ export class JsonRpcClient {
           reject(new ConnectionError('websocket connection timeout'));
         }
       }, 2000);
+
+      this.addConnectionListener(listener);
     });
+  }
+
+  private addConnectionListener(listener: (state: ConnectionState) => void): void {
+    this.connectionListeners.push(listener);
+  }
+
+  private removeConnectionListener(listener: (state: ConnectionState) => void): void {
+    this.connectionListeners = this.connectionListeners.filter(l => l !== listener);
+  }
+
+  private notifyConnectionListeners(): void {
+    for (const listener of this.connectionListeners) {
+      listener(this.wsState);
+    }
   }
 
   private attachWebSocketHandlers(): void {
@@ -186,8 +210,9 @@ export class JsonRpcClient {
   }
 
   private handleWebSocketOpen(): void {
-    this.logger.info(`websocket connected to ${this.getWebSocketUrl()}`);
+    this.logger.info('websocket connected');
     this.wsState = ConnectionState.CONNECTED;
+    this.notifyConnectionListeners();
     this.reconnectAttempts = 0;
     this.flushMessageQueue();
   }
@@ -225,6 +250,7 @@ export class JsonRpcClient {
 
     if (this.wsState === ConnectionState.CONNECTING) {
       this.wsState = ConnectionState.FAILED;
+      this.notifyConnectionListeners();
     }
   }
 
@@ -234,6 +260,7 @@ export class JsonRpcClient {
 
     if (this.wsState === ConnectionState.CONNECTING) {
       this.wsState = ConnectionState.FAILED;
+      this.notifyConnectionListeners();
     } else {
       this.wsState = ConnectionState.DISCONNECTED;
       this.ws = null;
@@ -340,7 +367,7 @@ export class JsonRpcClient {
     }
 
     this.wsState = ConnectionState.DISCONNECTED;
-    this.pendingRequests.clear();
+    this.failAllPendingRequests();
     this.messageQueue = [];
   }
 }
