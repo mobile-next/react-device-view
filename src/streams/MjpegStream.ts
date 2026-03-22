@@ -21,14 +21,17 @@ export class MjpegStream {
 
 	public start(): void {
 		this.isActive = true;
-		this.processMjpegStream().then();
+		this.processMjpegStream().catch((error) => {
+			console.error('device-view: unhandled MJPEG stream error:', error);
+			this.options.onError?.(error instanceof Error ? error : new Error(String(error)));
+		});
 	}
 
 	public stop(): void {
-		console.log("mobiledeck: stopping mjpeg stream through stop()");
+		console.log("device-view: stopping mjpeg stream through stop()");
 		this.isActive = false;
 		// cancel the reader to immediately abort any pending read operation
-		this.reader.cancel().then();
+		this.reader.cancel().catch(() => {});
 	}
 
 	private async processMjpegStream(): Promise<void> {
@@ -40,13 +43,13 @@ export class MjpegStream {
 		let contentType = '';
 		let bytesRead = 0;
 
-		console.log("mobiledeck: starting mjpeg stream");
+		console.log("device-view: starting mjpeg stream");
 		try {
 			while (this.isActive) {
 				const { done, value } = await this.reader.read();
 
 				if (done) {
-					console.log('mobiledeck: mjpeg stream ended by server');
+					console.log('device-view: mjpeg stream ended by server');
 					break;
 				}
 
@@ -105,7 +108,7 @@ export class MjpegStream {
 						processedData = true;
 
 						if (bytesRead >= contentLength) {
-							// console.log('mobiledeck: frame complete, content-type:', contentType, 'bytes:', contentLength);
+							// console.log('device-view: frame complete, content-type:', contentType, 'bytes:', contentLength);
 							this.options.onFrame(contentType, imageData);
 
 							inImage = false;
@@ -122,9 +125,9 @@ export class MjpegStream {
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error));
 			if (err.name === 'AbortError') {
-				console.log('mobiledeck: mjpeg stream processing aborted with AbortError');
+				console.log('device-view: mjpeg stream processing aborted with AbortError');
 			} else {
-				console.error('mobiledeck: mjpeg processing failed with error:', err);
+				console.error('device-view: mjpeg processing failed with error:', err);
 				this.options.onError?.(err);
 			}
 		}

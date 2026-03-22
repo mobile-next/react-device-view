@@ -37,7 +37,6 @@ export class AvcStream {
 	}
 
 	private initializeDecoder(): void {
-		// check if VideoDecoder is supported
 		if (typeof VideoDecoder === 'undefined') {
 			const error = new Error('VideoDecoder API not supported in this browser');
 			this.options.onError?.(error);
@@ -46,22 +45,14 @@ export class AvcStream {
 
 		this.decoder = new VideoDecoder({
 			output: (frame: VideoFrame) => {
-				// console.log(`mobiledeck: VideoDecoder output! frame=${frame.codedWidth}x${frame.codedHeight}, timestamp=${frame.timestamp}, format=${frame.format}`);
 				this.options.onFrame(frame);
 			},
 			error: (error: Error) => {
-				console.error('mobiledeck: VideoDecoder error callback triggered:', error);
-				console.error('mobiledeck: error name:', error.name, 'message:', error.message);
-				console.error('mobiledeck: decoder state after error:', this.decoder?.state);
-
-				// mark as not configured so we stop trying to decode
+				console.error('device-view: VideoDecoder error:', error);
 				this.isConfigured = false;
-
 				this.options.onError?.(error);
 			}
 		});
-
-		console.log('mobiledeck: VideoDecoder initialized, state:', this.decoder.state);
 	}
 
 	public start(): void {
@@ -70,7 +61,6 @@ export class AvcStream {
 	}
 
 	public stop(): void {
-		console.log('mobiledeck: stopping avc stream');
 		this.isActive = false;
 
 		// cancel the reader to immediately abort any pending read operation
@@ -89,94 +79,30 @@ export class AvcStream {
 		this.pps = null;
 	}
 
-	private findNalUnits(data: Uint8Array): NALUnit[] {
-		const nalUnits: NALUnit[] = [];
-		let start = -1;
-
-		// look for start codes: 0x00 0x00 0x01 or 0x00 0x00 0x00 0x01
-		for (let i = 0; i < data.length - 3; i++) {
-			if (data[i] === 0 && data[i + 1] === 0) {
-				let startCodeLength = 0;
-
-				// check for 0x00 0x00 0x00 0x01
-				if (i < data.length - 4 && data[i + 2] === 0 && data[i + 3] === 1) {
-					startCodeLength = 4;
-				}
-				// check for 0x00 0x00 0x01
-				else if (data[i + 2] === 1) {
-					startCodeLength = 3;
-				}
-
-				if (startCodeLength > 0) {
-					if (start !== -1) {
-						// extract previous nal unit
-						const nalData = data.slice(start, i);
-						if (nalData.length > 0) {
-							nalUnits.push(this.parseNalUnit(nalData));
-						}
-					}
-					start = i + startCodeLength;
-					i += startCodeLength - 1;
-				}
-			}
-		}
-
-		// handle last nal unit
-		if (start !== -1 && start < data.length) {
-			const nalData = data.slice(start);
-			if (nalData.length > 0) {
-				nalUnits.push(this.parseNalUnit(nalData));
-			}
-		}
-
-		return nalUnits;
-	}
-
 	private parseNalUnit(data: Uint8Array): NALUnit {
 		const nalHeader = data[0];
 		const nalTypeValue = nalHeader & 0x1F;
 
-		let type: NALUnitType = 'other';
-
-		switch (nalTypeValue) {
-			case 7:
-				type = 'sps';
-				break;
-			case 8:
-				type = 'pps';
-				break;
-			case 5:
-				type = 'idr';
-				break;
-			case 1:
-				type = 'non-idr';
-				break;
-			default:
-				type = 'other';
-				break;
-		}
-
-		// log NAL unit details
-		// const firstBytes = Array.from(data.slice(0, Math.min(10, data.length))).map(b => b.toString(16).padStart(2, '0')).join(' ');
-		// console.log(`mobiledeck: NAL unit type=${type} (${nalTypeValue}), length=${data.length}, first bytes: ${firstBytes}`);
+		const nalTypeMap: Record<number, NALUnitType> = { 7: 'sps', 8: 'pps', 5: 'idr', 1: 'non-idr' };
+		const type: NALUnitType = nalTypeMap[nalTypeValue] || 'other';
 
 		return { type, data };
 	}
 
 	private configureDecoder(): void {
 		if (!this.sps || !this.pps) {
-			console.log('mobiledeck: cannot configure - sps:', !!this.sps, 'pps:', !!this.pps);
+			console.log('device-view: cannot configure - sps:', !!this.sps, 'pps:', !!this.pps);
 			return;
 		}
 
 		// if decoder is closed or doesn't exist, reinitialize it
 		if (!this.decoder || this.decoder.state === 'closed') {
-			console.log('mobiledeck: decoder is closed or missing, reinitializing...');
+			console.log('device-view: decoder is closed or missing, reinitializing...');
 			this.initializeDecoder();
 		}
 
 		if (!this.decoder) {
-			console.error('mobiledeck: failed to create decoder');
+			console.error('device-view: failed to create decoder');
 			return;
 		}
 
@@ -187,7 +113,7 @@ export class AvcStream {
 
 		const codec = `avc1.${profileIdc.toString(16).padStart(2, '0')}${constraintSet.toString(16).padStart(2, '0')}${levelIdc.toString(16).padStart(2, '0')}`;
 
-		console.log('mobiledeck: configuring VideoDecoder with codec:', codec, 'size:', this.options.width, 'x', this.options.height);
+		console.log('device-view: configuring VideoDecoder with codec:', codec, 'size:', this.options.width, 'x', this.options.height);
 
 		// build avcC box (ISO/IEC 14496-15 format)
 		const avcC = this.buildAvcCBox(this.sps, this.pps);
@@ -202,10 +128,10 @@ export class AvcStream {
 			});
 
 			this.isConfigured = true;
-			console.log('mobiledeck: VideoDecoder configured successfully, state:', this.decoder.state);
+			console.log('device-view: VideoDecoder configured successfully, state:', this.decoder.state);
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error));
-			console.error('mobiledeck: failed to configure VideoDecoder:', err);
+			console.error('device-view: failed to configure VideoDecoder:', err);
 			this.isConfigured = false;
 			this.options.onError?.(err);
 		}
@@ -261,23 +187,17 @@ export class AvcStream {
 		// PPS data
 		avcC.set(pps, offset);
 
-		// log avcC box
-		const avcCHex = Array.from(avcC.slice(0, Math.min(50, avcC.length))).map(b => b.toString(16).padStart(2, '0')).join(' ');
-		console.log(`mobiledeck: built avcC box, size=${avcC.length}, first 50 bytes: ${avcCHex}`);
-
 		return avcC;
 	}
 
 	private async decodeFrame(nalUnit: NALUnit): Promise<void> {
 		if (!this.decoder || !this.isConfigured || this.decoder.state === 'closed') {
-			console.log(`mobiledeck: skipping decode - decoder=${!!this.decoder}, configured=${this.isConfigured}, state=${this.decoder?.state}`);
+			console.log(`device-view: skipping decode - decoder=${!!this.decoder}, configured=${this.isConfigured}, state=${this.decoder?.state}`);
 			return;
 		}
 
 		const isKeyFrame = nalUnit.type === 'idr';
 		const timestamp = this.frameCount * 16666; // assume ~60fps (16.666ms per frame)
-
-		// console.log(`mobiledeck: decoding frame #${this.frameCount}, type=${isKeyFrame ? 'key' : 'delta'}, size=${nalUnit.data.length}, decoder.state=${this.decoder.state}`);
 
 		try {
 			// convert from Annex B to AVCC format (length-prefixed)
@@ -301,25 +221,22 @@ export class AvcStream {
 
 			this.decoder.decode(chunk);
 			this.frameCount++;
-			// console.log(`mobiledeck: frame #${this.frameCount - 1} queued for decoding, queue length=${this.decoder.decodeQueueSize}`);
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error));
-			console.error('mobiledeck: error decoding frame:', err);
-			console.error('mobiledeck: marking decoder as not configured due to decode error');
+			console.error('device-view: error decoding AVC frame:', err);
 			this.isConfigured = false;
 		}
 	}
 
 	private async processAvcStream(): Promise<void> {
-		console.log('mobiledeck: starting avc stream');
-		let processedBytes = 0;
+		console.log('device-view: starting AVC stream');
 
 		try {
 			while (this.isActive) {
 				const { done, value } = await this.reader.read();
 
 				if (done) {
-					console.log('mobiledeck: avc stream ended by server');
+					console.log('device-view: avc stream ended by server');
 					break;
 				}
 
@@ -363,14 +280,14 @@ export class AvcStream {
 
 						// process NAL unit
 						if (nalUnit.type === 'sps') {
-							console.log('mobiledeck: received SPS, length:', nalUnit.data.length);
+							console.log('device-view: received SPS, length:', nalUnit.data.length);
 							this.sps = nalUnit.data;
 
 							if (this.pps && !this.isConfigured) {
 								this.configureDecoder();
 							}
 						} else if (nalUnit.type === 'pps') {
-							console.log('mobiledeck: received PPS, length:', nalUnit.data.length);
+							console.log('device-view: received PPS, length:', nalUnit.data.length);
 							this.pps = nalUnit.data;
 
 							if (this.sps && !this.isConfigured) {
@@ -394,9 +311,9 @@ export class AvcStream {
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error));
 			if (err.name === 'AbortError') {
-				console.log('mobiledeck: avc stream processing aborted');
+				console.log('device-view: avc stream processing aborted');
 			} else {
-				console.error('mobiledeck: avc processing failed:', err);
+				console.error('device-view: avc processing failed:', err);
 				this.options.onError?.(err);
 			}
 		}
