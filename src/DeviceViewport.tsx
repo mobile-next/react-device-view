@@ -1,7 +1,5 @@
-import React, { Ref, useState } from 'react';
-import { DeviceSkinComponent } from './DeviceSkin';
-import { DeviceControls } from './DeviceControls';
-import { DeviceDescriptor, ScreenSize, GesturePoint, StreamRenderMode } from './types';
+import React, { Ref, useRef, useState } from 'react';
+import { ScreenSize, GesturePoint, StreamRenderMode } from './types';
 import { DeviceSkin } from './DeviceSkins';
 
 export enum DeviceState {
@@ -25,6 +23,20 @@ interface GestureState {
   path: Array<[number, number]>;
 }
 
+const ViewportSpinner: React.FC<{ message: string }> = ({ message }) => (
+  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: '#888' }}>
+    <div>
+      <div style={{
+        width: '24px', height: '24px', margin: '0 auto 12px',
+        border: '2px solid #333', borderTopColor: '#888', borderRadius: '50%',
+        animation: 'device-view-spin 0.6s linear infinite'
+      }} />
+      <style>{`@keyframes device-view-spin { to { transform: rotate(360deg); } }`}</style>
+      <p style={{ margin: 0, fontSize: '14px' }}>{message}</p>
+    </div>
+  </div>
+);
+
 const emptyGestureState: GestureState = {
   isGesturing: false,
   startTime: 0,
@@ -37,7 +49,6 @@ export const DeviceViewport: React.FC<{
   screenSize: ScreenSize;
   onTap: (x: number, y: number) => void;
   onGesture: (points: Array<GesturePoint>) => void;
-  selectedDevice: DeviceDescriptor;
   connectProgressMessage?: string;
   streamMode?: StreamRenderMode;
   videoRef?: Ref<HTMLVideoElement | null>;
@@ -59,6 +70,7 @@ export const DeviceViewport: React.FC<{
 }) => {
   const [clicks, setClicks] = useState<ClickAnimation[]>([]);
   const [gestureState, setGestureState] = useState<GestureState>(emptyGestureState);
+  const gestureRef = useRef<GestureState>(emptyGestureState);
 
   const convertToScreenCoords = (clientX: number, clientY: number, element: HTMLCanvasElement | HTMLVideoElement) => {
     const rect = element.getBoundingClientRect();
@@ -69,10 +81,15 @@ export const DeviceViewport: React.FC<{
     return { x, y, screenX, screenY };
   };
 
+  const updateGesture = (newState: GestureState) => {
+    gestureRef.current = newState;
+    setGestureState(newState);
+  };
+
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement | HTMLVideoElement>) => {
     const coords = convertToScreenCoords(e.clientX, e.clientY, e.currentTarget);
     const now = Date.now();
-    setGestureState({
+    updateGesture({
       isGesturing: false,
       startTime: now,
       lastTimestamp: now,
@@ -82,35 +99,33 @@ export const DeviceViewport: React.FC<{
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement | HTMLVideoElement>) => {
-    if (gestureState.points.length === 0) return;
+    const g = gestureRef.current;
+    if (g.points.length === 0) return;
     const coords = convertToScreenCoords(e.clientX, e.clientY, e.currentTarget);
     const now = Date.now();
 
-    if (!gestureState.isGesturing && (now - gestureState.startTime) > 100) {
-      setGestureState((prev) => ({ ...prev, isGesturing: true }));
-    }
-
-    if (gestureState.isGesturing || (now - gestureState.startTime) > 100) {
-      const duration = now - gestureState.lastTimestamp;
+    if (g.isGesturing || (now - g.startTime) > 100) {
+      const duration = now - g.lastTimestamp;
       const newPoint: GesturePoint = { x: coords.screenX, y: coords.screenY, duration };
-      setGestureState((prev) => ({
-        ...prev,
+      updateGesture({
+        ...g,
         isGesturing: true,
-        points: [...prev.points, newPoint],
-        path: [...prev.path, [coords.x, coords.y]],
+        points: [...g.points, newPoint],
+        path: [...g.path, [coords.x, coords.y]],
         lastTimestamp: now,
-      }));
+      });
     }
   };
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement | HTMLVideoElement>) => {
-    if (gestureState.points.length === 0) return;
+    const g = gestureRef.current;
+    if (g.points.length === 0) return;
     const coords = convertToScreenCoords(e.clientX, e.clientY, e.currentTarget);
     const now = Date.now();
 
-    if (gestureState.isGesturing) {
-      const duration = now - gestureState.lastTimestamp;
-      const finalPoints: Array<GesturePoint> = [...gestureState.points, { x: coords.screenX, y: coords.screenY, duration }];
+    if (g.isGesturing) {
+      const duration = now - g.lastTimestamp;
+      const finalPoints: Array<GesturePoint> = [...g.points, { x: coords.screenX, y: coords.screenY, duration }];
       onGesture(finalPoints);
     } else {
       const newClick: ClickAnimation = { id: Date.now(), x: coords.x, y: coords.y };
@@ -119,7 +134,7 @@ export const DeviceViewport: React.FC<{
       onTap(coords.screenX, coords.screenY);
     }
 
-    setGestureState(emptyGestureState);
+    updateGesture(emptyGestureState);
   };
 
   const borderRadius = deviceSkin.imageFilename ? `${deviceSkin.borderRadius * skinRatio}px` : undefined;
@@ -136,17 +151,7 @@ export const DeviceViewport: React.FC<{
   return (
     <>
       {(state === DeviceState.BOOTING || state === DeviceState.CONNECTING) && (
-        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: '#888' }}>
-          <div>
-            <div style={{
-              width: '24px', height: '24px', margin: '0 auto 12px',
-              border: '2px solid #333', borderTopColor: '#888', borderRadius: '50%',
-              animation: 'device-view-spin 0.6s linear infinite'
-            }} />
-            <style>{`@keyframes device-view-spin { to { transform: rotate(360deg); } }`}</style>
-            <p style={{ margin: 0, fontSize: '14px' }}>{connectProgressMessage || 'Connecting...'}</p>
-          </div>
-        </div>
+        <ViewportSpinner message={connectProgressMessage || 'Connecting...'} />
       )}
 
       {state === DeviceState.CONNECTED && (

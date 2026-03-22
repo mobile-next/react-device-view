@@ -107,7 +107,6 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
                   onTap={onTap}
                   onGesture={onGesture}
                   connectProgressMessage={connectProgressMessage}
-                  selectedDevice={selectedDevice}
                   streamMode={streamMode}
                   deviceSkin={deviceSkin}
                   canvasRef={canvasRef}

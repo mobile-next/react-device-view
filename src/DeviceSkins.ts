@@ -1,4 +1,4 @@
-import { DeviceDescriptor } from './types';
+import { DeviceDescriptor, DevicePlatform } from './types';
 
 interface DeviceSkinInsets {
   top: number;
@@ -44,11 +44,11 @@ export const iPadSkin: DeviceSkin = {
 };
 
 export function getDeviceSkinForDevice(device: DeviceDescriptor): DeviceSkin {
-  if (device.platform === 'android') {
+  if (device.platform === DevicePlatform.ANDROID) {
     return AndroidDeviceSkin;
   }
 
-  if (device.platform === 'ios') {
+  if (device.platform === DevicePlatform.IOS) {
     if (device.name.includes('iPad')) {
       return iPadSkin;
     }

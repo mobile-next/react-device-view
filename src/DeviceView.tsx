@@ -16,6 +16,32 @@ interface WebRtcScreencaptureResult {
   iceServers?: Array<{ urls: string[] | string }>;
 }
 
+function isWebRtcResponse(response: unknown): response is WebRtcScreencaptureResult {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    typeof (response as any).sessionId === 'string' &&
+    typeof (response as any).webrtcServerUrl === 'string'
+  );
+}
+
+const Spinner: React.FC<{ message?: string }> = ({ message }) => (
+  <div style={{
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: '100%', height: '100%', backgroundColor: '#202224', color: '#888'
+  }}>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{
+        width: '24px', height: '24px', margin: '0 auto 12px',
+        border: '2px solid #333', borderTopColor: '#888', borderRadius: '50%',
+        animation: 'device-view-spin 0.6s linear infinite'
+      }} />
+      <style>{`@keyframes device-view-spin { to { transform: rotate(360deg); } }`}</style>
+      <p style={{ margin: 0, fontSize: '14px' }}>{message || 'Loading...'}</p>
+    </div>
+  </div>
+);
+
 export const DeviceView: React.FC<DeviceViewProps> = ({
   serverUrl,
   token,
@@ -175,8 +201,8 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
       };
 
       // WebRTC response
-      if ((response as any).sessionId && (response as any).webrtcServerUrl) {
-        const result = response as any as WebRtcScreencaptureResult;
+      if (isWebRtcResponse(response)) {
+        const result = response;
         const session: WebRtcSessionInfo = {
           sessionId: result.sessionId,
           webrtcServerUrl: result.webrtcServerUrl,
@@ -320,22 +346,7 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
   }, []);
 
   if (!selectedDevice) {
-    return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: '100%', height: '100%', backgroundColor: '#202224', color: '#888'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '24px', height: '24px', margin: '0 auto 12px',
-            border: '2px solid #333', borderTopColor: '#888', borderRadius: '50%',
-            animation: 'device-view-spin 0.6s linear infinite'
-          }} />
-          <style>{`@keyframes device-view-spin { to { transform: rotate(360deg); } }`}</style>
-          <p style={{ margin: 0, fontSize: '14px' }}>Loading device...</p>
-        </div>
-      </div>
-    );
+    return <Spinner message="Loading device..." />;
   }
 
   const hasSkins = !!skinsUrl;
