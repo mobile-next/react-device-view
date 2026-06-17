@@ -438,6 +438,11 @@ var DeviceInstance = react.forwardRef(({
         // definite height propagates all the way down to the video/skin. Without
         // it every wrapper is content-sized and we'd be forced back to viewport units.
         height: "100%",
+        // border-box keeps the 24px padding *inside* height:100%. Under the
+        // default content-box the padding is added on top, so the element renders
+        // 48px taller than the host's box and overflows it — bleeding over the
+        // chrome above and pushing the bottom padding out of view.
+        boxSizing: "border-box",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
