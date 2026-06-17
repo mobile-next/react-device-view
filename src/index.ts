@@ -10,6 +10,7 @@ export {
 
 export type {
   DeviceViewProps,
+  DeviceViewHandle,
   DeviceDescriptor,
   ScreenSize,
   DeviceInfo,

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { DeviceViewProps, DeviceDescriptor, DevicePlatform, DeviceType, ScreenSize, ScreenCaptureFormat, StreamRenderMode } from './types';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { DeviceViewProps, DeviceViewHandle, DeviceDescriptor, DevicePlatform, DeviceType, ScreenSize, ScreenCaptureFormat, StreamRenderMode } from './types';
 import { DeviceInstance, DeviceStreamHandle } from './DeviceInstance';
 import { DeviceState } from './DeviceViewport';
 import { DeviceSkin, getDeviceSkinForDevice, NoDeviceSkin } from './DeviceSkins';
@@ -42,15 +42,16 @@ const Spinner: React.FC<{ message?: string }> = ({ message }) => (
   </div>
 );
 
-export const DeviceView: React.FC<DeviceViewProps> = ({
+export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   serverUrl,
   token,
   deviceId,
   skinsUrl,
+  showControls = true,
   onError,
   onConnected,
   onDisconnected,
-}) => {
+}, ref) => {
   const [deviceState, setDeviceState] = useState<DeviceState>(DeviceState.UNKNOWN);
   const [connectProgressMessage, setConnectProgressMessage] = useState<string | null>(null);
   const [imageBitmap, setImageBitmap] = useState<ImageBitmap | null>(null);
@@ -92,6 +93,13 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
     selectedDevice,
     deviceClient: getDeviceClient()
   });
+
+  useImperativeHandle(ref, () => ({
+    takeScreenshot: onTakeScreenshot,
+    home: onHome,
+    volumeUp: onIncreaseVolume,
+    volumeDown: onDecreaseVolume,
+  }), [onTakeScreenshot, onHome, onIncreaseVolume, onDecreaseVolume]);
 
   // Apply webrtc media stream to video element
   useEffect(() => {
@@ -377,6 +385,9 @@ export const DeviceView: React.FC<DeviceViewProps> = ({
       onIncreaseVolume={onIncreaseVolume}
       onDecreaseVolume={onDecreaseVolume}
       onTogglePower={onPower}
+      showControls={showControls}
     />
   );
-};
+});
+
+DeviceView.displayName = 'DeviceView';

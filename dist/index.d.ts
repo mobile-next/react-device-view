@@ -56,9 +56,16 @@ interface DeviceViewProps {
     token: string;
     deviceId: string;
     skinsUrl?: string;
+    showControls?: boolean;
     onError?: (error: Error) => void;
     onConnected?: () => void;
     onDisconnected?: () => void;
+}
+interface DeviceViewHandle {
+    takeScreenshot: () => void;
+    home: () => void;
+    volumeUp: () => void;
+    volumeDown: () => void;
 }
 interface GesturePoint {
     x: number;
@@ -67,7 +74,7 @@ interface GesturePoint {
 }
 type StreamRenderMode = 'canvas' | 'video';
 
-declare const DeviceView: React.FC<DeviceViewProps>;
+declare const DeviceView: React.ForwardRefExoticComponent<DeviceViewProps & React.RefAttributes<DeviceViewHandle>>;
 
 interface WebRtcSessionInfo {
     sessionId: string;
@@ -91,10 +98,16 @@ declare class WebRtcStream {
     private isActive;
     private currentStream;
     private rpcIdCounter;
+    private statsTimer;
+    private prevStats;
+    private prevStatsTime;
     constructor(session: WebRtcSessionInfo, options: WebRtcStreamOptions);
     start(): Promise<void>;
     stop(): void;
     private createPeerConnection;
+    private logSessionIdentity;
+    private startStatsLogging;
+    private logReceiverStats;
     private setupH264Transceiver;
     private createAndSetOffer;
     private waitForIceGathering;
@@ -315,4 +328,4 @@ interface DeviceControlsProps {
 }
 declare const DeviceControls: React.FC<DeviceControlsProps>;
 
-export { AvcStream, type ButtonType, ConnectionError, DeviceClient, type DeviceClientApi, DeviceControls, type DeviceDescriptor, type DeviceInfo, type DeviceInfoResponse, DeviceInstance, DevicePlatform, type DeviceSkin, DeviceState, type DeviceStreamHandle, type DeviceStreamProps, DeviceType, DeviceView, type DeviceViewProps, DeviceViewport, type GesturePoint, JsonRpcClient, MjpegStream, NoDeviceSkin, type ScreenCaptureFormat, type ScreenSize, type ScreencaptureResponse, type ScreenshotResponse, type StreamRenderMode, type WebRtcSessionInfo, WebRtcStream, type WebRtcStreamOptions, createNoOpDeviceClient, getDeviceSkinForDevice };
+export { AvcStream, type ButtonType, ConnectionError, DeviceClient, type DeviceClientApi, DeviceControls, type DeviceDescriptor, type DeviceInfo, type DeviceInfoResponse, DeviceInstance, DevicePlatform, type DeviceSkin, DeviceState, type DeviceStreamHandle, type DeviceStreamProps, DeviceType, DeviceView, type DeviceViewHandle, type DeviceViewProps, DeviceViewport, type GesturePoint, JsonRpcClient, MjpegStream, NoDeviceSkin, type ScreenCaptureFormat, type ScreenSize, type ScreencaptureResponse, type ScreenshotResponse, type StreamRenderMode, type WebRtcSessionInfo, WebRtcStream, type WebRtcStreamOptions, createNoOpDeviceClient, getDeviceSkinForDevice };
