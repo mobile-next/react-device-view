@@ -67,6 +67,7 @@ export interface DeviceViewProps {
   token: string;
   deviceId: string;
   skinsUrl?: string;
+  showControls?: boolean;
   onError?: (error: Error) => void;
   onConnected?: () => void;
   onDisconnected?: () => void;

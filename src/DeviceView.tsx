@@ -47,6 +47,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   token,
   deviceId,
   skinsUrl,
+  showControls = true,
   onError,
   onConnected,
   onDisconnected,
@@ -384,6 +385,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
       onIncreaseVolume={onIncreaseVolume}
       onDecreaseVolume={onDecreaseVolume}
       onTogglePower={onPower}
+      showControls={showControls}
     />
   );
 });
