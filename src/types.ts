@@ -72,6 +72,13 @@ export interface DeviceViewProps {
   onDisconnected?: () => void;
 }
 
+export interface DeviceViewHandle {
+  takeScreenshot: () => void;
+  home: () => void;
+  volumeUp: () => void;
+  volumeDown: () => void;
+}
+
 export interface GesturePoint {
   x: number;
   y: number;
