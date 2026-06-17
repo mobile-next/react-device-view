@@ -559,6 +559,7 @@ var noopLogger = {
   }
 };
 var JSON_RPC_VERSION = "2.0";
+var CONNECTION_TIMEOUT_MS = 1e4;
 var JsonRpcClient = class {
   constructor(url, logger, authToken) {
     this.url = url;
@@ -666,7 +667,7 @@ var JsonRpcClient = class {
           }
           reject(new ConnectionError("websocket connection timeout"));
         }
-      }, 2e3);
+      }, CONNECTION_TIMEOUT_MS);
       this.addConnectionListener(listener);
     });
   }
@@ -1219,6 +1220,9 @@ var WebRtcStream = class {
   isActive = false;
   currentStream = null;
   rpcIdCounter = 1;
+  statsTimer = null;
+  prevStats = null;
+  prevStatsTime = 0;
   async start() {
     try {
       console.log("device-view: starting WebRTC stream, sessionId:", this.session.sessionId);
@@ -1247,6 +1251,11 @@ var WebRtcStream = class {
     this.isActive = false;
     this.offerSent = false;
     this.pendingIceCandidates = [];
+    if (this.statsTimer) {
+      clearInterval(this.statsTimer);
+      this.statsTimer = null;
+    }
+    this.prevStats = null;
     if (this.currentStream) {
       this.currentStream.getTracks().forEach((track) => track.stop());
       this.currentStream = null;
@@ -1286,6 +1295,10 @@ var WebRtcStream = class {
     this.pc.onconnectionstatechange = () => {
       if (!this.pc) return;
       console.log("device-view: WebRTC connection state:", this.pc.connectionState);
+      if (this.pc.connectionState === "connected") {
+        void this.logSessionIdentity();
+        this.startStatsLogging();
+      }
       this.options.onConnectionStateChange?.(this.pc.connectionState);
     };
     this.pc.oniceconnectionstatechange = () => {
@@ -1293,6 +1306,75 @@ var WebRtcStream = class {
       console.log("device-view: WebRTC ICE connection state:", this.pc.iceConnectionState);
       this.options.onIceConnectionStateChange?.(this.pc.iceConnectionState);
     };
+  }
+  // Logs a single correlation line tying the session id to the inbound video
+  // SSRC and a UTC timestamp. A Chrome webrtc-internals dump shows the SSRC but
+  // not the session id, so this lets a dump be matched to the server logs.
+  async logSessionIdentity() {
+    try {
+      if (!this.pc) return;
+      const stats = await this.pc.getStats();
+      let ssrc;
+      stats.forEach((report) => {
+        const r = report;
+        if (r.type === "inbound-rtp" && r.kind === "video") {
+          ssrc = r.ssrc;
+        }
+      });
+      console.log(
+        `device-view: session correlation sessionId=${this.session.sessionId} ssrc=${ssrc ?? "unknown"} utc=${(/* @__PURE__ */ new Date()).toISOString()}`
+      );
+    } catch (err) {
+      console.warn("device-view: failed to log session identity:", err);
+    }
+  }
+  startStatsLogging() {
+    if (this.statsTimer) return;
+    this.prevStats = null;
+    this.prevStatsTime = 0;
+    this.statsTimer = setInterval(() => {
+      void this.logReceiverStats();
+    }, 1e3);
+  }
+  // Logs receiver-side telemetry every second so the viewer experience is
+  // readable as text: jitter-buffer delay (the lag), freezes (the hangs),
+  // dropped frames (the missing animation), fps/resolution, RTT, loss.
+  async logReceiverStats() {
+    try {
+      if (!this.pc) return;
+      const report = await this.pc.getStats();
+      let v;
+      let cp;
+      report.forEach((s) => {
+        const r = s;
+        if (r.type === "inbound-rtp" && r.kind === "video") v = r;
+        if (r.type === "candidate-pair" && r.nominated) cp = r;
+      });
+      if (!v) return;
+      const now = Date.now();
+      const prev = this.prevStats;
+      const prevTime = this.prevStatsTime;
+      this.prevStats = v;
+      this.prevStatsTime = now;
+      if (!prev) return;
+      const secs = (now - prevTime) / 1e3 || 1;
+      const dEmitted = (v.jitterBufferEmittedCount ?? 0) - (prev.jitterBufferEmittedCount ?? 0);
+      const jbDelayMs = dEmitted > 0 ? Math.round(((v.jitterBufferDelay ?? 0) - (prev.jitterBufferDelay ?? 0)) / dEmitted * 1e3) : 0;
+      const jbTargetMs = dEmitted > 0 ? Math.round(((v.jitterBufferTargetDelay ?? 0) - (prev.jitterBufferTargetDelay ?? 0)) / dEmitted * 1e3) : 0;
+      const dFreezes = (v.freezeCount ?? 0) - (prev.freezeCount ?? 0);
+      const dFreezeDur = (v.totalFreezesDuration ?? 0) - (prev.totalFreezesDuration ?? 0);
+      const dDropped = (v.framesDropped ?? 0) - (prev.framesDropped ?? 0);
+      const dLost = (v.packetsLost ?? 0) - (prev.packetsLost ?? 0);
+      const dNack = (v.nackCount ?? 0) - (prev.nackCount ?? 0);
+      const dPli = (v.pliCount ?? 0) - (prev.pliCount ?? 0);
+      const bitrateKbps = Math.round(((v.bytesReceived ?? 0) - (prev.bytesReceived ?? 0)) * 8 / secs / 1e3);
+      const rttMs = cp?.currentRoundTripTime != null ? Math.round(cp.currentRoundTripTime * 1e3) : -1;
+      console.log(
+        `device-view stats: fps=${v.framesPerSecond ?? 0} res=${v.frameWidth ?? 0}x${v.frameHeight ?? 0} jbDelay=${jbDelayMs}ms jbTarget=${jbTargetMs}ms rtt=${rttMs}ms freezes=${v.freezeCount ?? 0}(+${dFreezes},${dFreezeDur.toFixed(1)}s) droppedFrames=+${dDropped} lost=+${dLost} nack=+${dNack} pli=+${dPli} bitrate=${bitrateKbps}kbps`
+      );
+    } catch (err) {
+      console.warn("device-view: failed to log receiver stats:", err);
+    }
   }
   setupH264Transceiver() {
     if (!this.pc) return;
@@ -1572,15 +1654,16 @@ var Spinner = ({ message }) => /* @__PURE__ */ jsx("div", { style: {
   /* @__PURE__ */ jsx("style", { children: `@keyframes device-view-spin { to { transform: rotate(360deg); } }` }),
   /* @__PURE__ */ jsx("p", { style: { margin: 0, fontSize: "14px" }, children: message || "Loading..." })
 ] }) });
-var DeviceView = ({
+var DeviceView = forwardRef(({
   serverUrl,
   token,
   deviceId,
   skinsUrl,
+  showControls = true,
   onError,
   onConnected,
   onDisconnected
-}) => {
+}, ref) => {
   const [deviceState, setDeviceState] = useState("UNKNOWN" /* UNKNOWN */);
   const [connectProgressMessage, setConnectProgressMessage] = useState(null);
   const [imageBitmap, setImageBitmap] = useState(null);
@@ -1625,6 +1708,12 @@ var DeviceView = ({
     selectedDevice,
     deviceClient: getDeviceClient()
   });
+  useImperativeHandle(ref, () => ({
+    takeScreenshot: onTakeScreenshot,
+    home: onHome,
+    volumeUp: onIncreaseVolume,
+    volumeDown: onDecreaseVolume
+  }), [onTakeScreenshot, onHome, onIncreaseVolume, onDecreaseVolume]);
   useEffect(() => {
     if (!webrtcMediaStream || !videoRef.current) return;
     const video = videoRef.current;
@@ -1878,10 +1967,12 @@ var DeviceView = ({
       onAppSwitch,
       onIncreaseVolume,
       onDecreaseVolume,
-      onTogglePower: onPower
+      onTogglePower: onPower,
+      showControls
     }
   );
-};
+});
+DeviceView.displayName = "DeviceView";
 
 export { AvcStream, ConnectionError, DeviceClient, DeviceControls, DeviceInstance, DevicePlatform, DeviceState, DeviceType, DeviceView, DeviceViewport, JsonRpcClient, MjpegStream, NoDeviceSkin, WebRtcStream, createNoOpDeviceClient, getDeviceSkinForDevice };
 //# sourceMappingURL=index.mjs.map

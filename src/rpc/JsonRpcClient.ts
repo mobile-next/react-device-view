@@ -49,6 +49,8 @@ interface TokenExchangeResponse {
 
 const JSON_RPC_VERSION = '2.0';
 
+const CONNECTION_TIMEOUT_MS = 10000;
+
 export class JsonRpcClient {
 
   private idCounter = 1;
@@ -178,7 +180,7 @@ export class JsonRpcClient {
           }
           reject(new ConnectionError('websocket connection timeout'));
         }
-      }, 2000);
+      }, CONNECTION_TIMEOUT_MS);
 
       this.addConnectionListener(listener);
     });
