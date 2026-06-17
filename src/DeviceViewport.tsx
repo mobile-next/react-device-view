@@ -142,9 +142,12 @@ export const DeviceViewport: React.FC<{
     cursor: 'crosshair',
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
-    maxHeight: 'calc(100vh - 100px)',
-    maxWidth: 'calc(100vw - 2em)',
+    // Fill the box the layout hands us and letterbox to aspect ratio. The host
+    // app is responsible for bounding that box (see DeviceInstance height:100%);
+    // we no longer size off the viewport, so there is no chrome height to guess.
+    objectFit: 'contain',
+    maxHeight: '100%',
+    maxWidth: '100%',
     borderRadius
   };
 

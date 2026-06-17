@@ -29,6 +29,7 @@ export interface DeviceStreamProps {
   onIncreaseVolume?: () => void;
   onDecreaseVolume?: () => void;
   onTogglePower?: () => void;
+  showControls?: boolean;
 }
 
 export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(({
@@ -49,6 +50,7 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
   onIncreaseVolume,
   onDecreaseVolume,
   onTogglePower,
+  showControls = true,
   streamMode = 'canvas',
   videoRef,
 }, ref) => {
@@ -79,6 +81,10 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
       style={{
         position: 'relative',
         flexGrow: 1,
+        // height:100% lets this fill the (bounded) box the host gives us, so the
+        // definite height propagates all the way down to the video/skin. Without
+        // it every wrapper is content-sized and we'd be forced back to viewport units.
+        height: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -91,10 +97,10 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
       tabIndex={0}
       onKeyDown={(e) => onKeyDown(e.key)}
     >
-      <div style={{ position: 'relative', overflow: 'visible' }}>
+      <div style={{ position: 'relative', height: '100%', overflow: 'visible' }}>
         <div style={{ width: '100%', height: '100%', overflow: 'visible' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'white' }}>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
               <DeviceSkinComponent
                 skinOverlayUri={skinOverlayUri}
                 deviceSkin={deviceSkin}
@@ -116,16 +122,18 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
                 />
               </DeviceSkinComponent>
 
-              <DeviceControls
-                onRotateDevice={onRotateDevice}
-                onTakeScreenshot={onTakeScreenshot}
-                onDeviceHome={onDeviceHome}
-                onDeviceBack={selectedDevice.platform === 'android' ? onDeviceBack : undefined}
-                onAppSwitch={selectedDevice.platform === 'android' ? onAppSwitch : undefined}
-                onIncreaseVolume={onIncreaseVolume}
-                onDecreaseVolume={onDecreaseVolume}
-                onTogglePower={onTogglePower}
-              />
+              {showControls && (
+                <DeviceControls
+                  onRotateDevice={onRotateDevice}
+                  onTakeScreenshot={onTakeScreenshot}
+                  onDeviceHome={onDeviceHome}
+                  onDeviceBack={selectedDevice.platform === 'android' ? onDeviceBack : undefined}
+                  onAppSwitch={selectedDevice.platform === 'android' ? onAppSwitch : undefined}
+                  onIncreaseVolume={onIncreaseVolume}
+                  onDecreaseVolume={onDecreaseVolume}
+                  onTogglePower={onTogglePower}
+                />
+              )}
             </div>
           </div>
         </div>
