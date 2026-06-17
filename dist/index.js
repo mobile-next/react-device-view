@@ -33,9 +33,9 @@ var DeviceSkinComponent = ({
   children
 }) => {
   if (!skinOverlayUri) {
-    return /* @__PURE__ */ jsxRuntime.jsx("div", { style: { position: "relative" }, children });
+    return /* @__PURE__ */ jsxRuntime.jsx("div", { style: { position: "relative", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }, children });
   }
-  return /* @__PURE__ */ jsxRuntime.jsxs("div", { style: { position: "relative" }, children: [
+  return /* @__PURE__ */ jsxRuntime.jsxs("div", { style: { position: "relative", height: "100%" }, children: [
     /* @__PURE__ */ jsxRuntime.jsx(
       "img",
       {
@@ -44,9 +44,11 @@ var DeviceSkinComponent = ({
         alt: "",
         style: {
           position: "relative",
-          height: "calc(100vh - 100px)",
+          // Height comes from the container (bounded by the host app), not the
+          // viewport. width:auto keeps the skin's aspect ratio.
+          height: "100%",
           width: "auto",
-          maxWidth: "calc(100vw - 2em)"
+          maxWidth: "100%"
         },
         draggable: false,
         onLoad: onSkinLoad
@@ -314,9 +316,12 @@ var DeviceViewport = ({
     cursor: "crosshair",
     width: "100%",
     height: "100%",
-    objectFit: "cover",
-    maxHeight: "calc(100vh - 100px)",
-    maxWidth: "calc(100vw - 2em)",
+    // Fill the box the layout hands us and letterbox to aspect ratio. The host
+    // app is responsible for bounding that box (see DeviceInstance height:100%);
+    // we no longer size off the viewport, so there is no chrome height to guess.
+    objectFit: "contain",
+    maxHeight: "100%",
+    maxWidth: "100%",
     borderRadius
   };
   return /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
@@ -399,6 +404,7 @@ var DeviceInstance = react.forwardRef(({
   onIncreaseVolume,
   onDecreaseVolume,
   onTogglePower,
+  showControls = true,
   streamMode = "canvas",
   videoRef
 }, ref) => {
@@ -428,6 +434,10 @@ var DeviceInstance = react.forwardRef(({
       style: {
         position: "relative",
         flexGrow: 1,
+        // height:100% lets this fill the (bounded) box the host gives us, so the
+        // definite height propagates all the way down to the video/skin. Without
+        // it every wrapper is content-sized and we'd be forced back to viewport units.
+        height: "100%",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -439,7 +449,7 @@ var DeviceInstance = react.forwardRef(({
       },
       tabIndex: 0,
       onKeyDown: (e) => onKeyDown(e.key),
-      children: /* @__PURE__ */ jsxRuntime.jsx("div", { style: { position: "relative", overflow: "visible" }, children: /* @__PURE__ */ jsxRuntime.jsx("div", { style: { width: "100%", height: "100%", overflow: "visible" }, children: /* @__PURE__ */ jsxRuntime.jsx("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "white" }, children: /* @__PURE__ */ jsxRuntime.jsxs("div", { style: { position: "relative", display: "flex", alignItems: "center" }, children: [
+      children: /* @__PURE__ */ jsxRuntime.jsx("div", { style: { position: "relative", height: "100%", overflow: "visible" }, children: /* @__PURE__ */ jsxRuntime.jsx("div", { style: { width: "100%", height: "100%", overflow: "visible" }, children: /* @__PURE__ */ jsxRuntime.jsx("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "white" }, children: /* @__PURE__ */ jsxRuntime.jsxs("div", { style: { position: "relative", height: "100%", display: "flex", alignItems: "center" }, children: [
         /* @__PURE__ */ jsxRuntime.jsx(
           DeviceSkinComponent,
           {
@@ -465,7 +475,7 @@ var DeviceInstance = react.forwardRef(({
             )
           }
         ),
-        /* @__PURE__ */ jsxRuntime.jsx(
+        showControls && /* @__PURE__ */ jsxRuntime.jsx(
           DeviceControls,
           {
             onRotateDevice,

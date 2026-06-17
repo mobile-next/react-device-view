@@ -20,23 +20,25 @@ export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({
 }) => {
   if (!skinOverlayUri) {
     return (
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {children}
       </div>
     );
   }
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', height: '100%' }}>
       <img
         ref={deviceSkinRef}
         src={skinOverlayUri}
         alt=""
         style={{
           position: 'relative',
-          height: 'calc(100vh - 100px)',
+          // Height comes from the container (bounded by the host app), not the
+          // viewport. width:auto keeps the skin's aspect ratio.
+          height: '100%',
           width: 'auto',
-          maxWidth: 'calc(100vw - 2em)'
+          maxWidth: '100%'
         }}
         draggable={false}
         onLoad={onSkinLoad}

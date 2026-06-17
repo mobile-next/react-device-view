@@ -299,6 +299,7 @@ interface DeviceStreamProps {
     onIncreaseVolume?: () => void;
     onDecreaseVolume?: () => void;
     onTogglePower?: () => void;
+    showControls?: boolean;
 }
 declare const DeviceInstance: React.ForwardRefExoticComponent<DeviceStreamProps & React.RefAttributes<DeviceStreamHandle>>;
 
