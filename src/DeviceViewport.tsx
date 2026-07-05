@@ -1,6 +1,5 @@
 import React, { Ref, useRef, useState } from 'react';
 import { ScreenSize, GesturePoint, StreamRenderMode } from './types';
-import { DeviceSkin } from './DeviceSkins';
 
 export enum DeviceState {
   UNKNOWN = "UNKNOWN",
@@ -53,8 +52,6 @@ export const DeviceViewport: React.FC<{
   streamMode?: StreamRenderMode;
   videoRef?: Ref<HTMLVideoElement | null>;
   canvasRef: Ref<HTMLCanvasElement>;
-  deviceSkin: DeviceSkin;
-  skinRatio: number;
   state: DeviceState;
 }> = ({
   screenSize,
@@ -64,8 +61,6 @@ export const DeviceViewport: React.FC<{
   streamMode,
   videoRef,
   canvasRef,
-  deviceSkin,
-  skinRatio,
   state
 }) => {
   const [clicks, setClicks] = useState<ClickAnimation[]>([]);
@@ -137,7 +132,6 @@ export const DeviceViewport: React.FC<{
     updateGesture(emptyGestureState);
   };
 
-  const borderRadius = deviceSkin.imageFilename ? `${deviceSkin.borderRadius * skinRatio}px` : undefined;
   const streamStyle: React.CSSProperties = {
     cursor: 'crosshair',
     width: '100%',
@@ -145,10 +139,10 @@ export const DeviceViewport: React.FC<{
     // Fill the box the layout hands us and letterbox to aspect ratio. The host
     // app is responsible for bounding that box (see DeviceInstance height:100%);
     // we no longer size off the viewport, so there is no chrome height to guess.
+    // Corner rounding / camera cutout are handled by the skin mask, not here.
     objectFit: 'contain',
     maxHeight: '100%',
-    maxWidth: '100%',
-    borderRadius
+    maxWidth: '100%'
   };
 
   return (

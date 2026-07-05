@@ -46,7 +46,6 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   serverUrl,
   token,
   deviceId,
-  skinsUrl,
   showControls = true,
   onError,
   onConnected,
@@ -314,6 +313,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
       const descriptor: DeviceDescriptor = {
         id: result.device.id,
         name: result.device.name,
+        model: result.device.model,
         platform: result.device.platform as DevicePlatform,
         type: result.device.type as DeviceType,
       };
@@ -357,12 +357,6 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
     return <Spinner message="Loading device..." />;
   }
 
-  const hasSkins = !!skinsUrl;
-  const skinOverlayUri = hasSkins
-    ? `${skinsUrl}/${deviceSkin.imageFilename}`
-    : '';
-  const activeSkin = hasSkins ? deviceSkin : NoDeviceSkin;
-
   return (
     <DeviceInstance
       ref={deviceStreamRef}
@@ -370,8 +364,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
       connectProgressMessage={connectProgressMessage || undefined}
       selectedDevice={selectedDevice}
       screenSize={screenSizeRef.current}
-      skinOverlayUri={skinOverlayUri}
-      deviceSkin={activeSkin}
+      deviceSkin={deviceSkin}
       streamMode={streamMode}
       videoRef={videoRef}
       onTap={handleTap}

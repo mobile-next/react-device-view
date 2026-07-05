@@ -13,7 +13,7 @@ type DeviceInfo = {
 };
 
 function ConnectForm({ onConnect }: { onConnect: (serverUrl: string, token: string) => void }) {
-  const [serverUrl, setServerUrl] = useState('wss://api.mobilenexthq.com/ws');
+  const [serverUrl, setServerUrl] = useState('wss://app.mobilenext.ai/ws');
   const [token, setToken] = useState('');
 
   return (

@@ -1,24 +1,23 @@
-import React, { RefObject } from 'react';
+import React from 'react';
 import { DeviceSkin as DeviceSkinType } from './DeviceSkins';
 
 export interface DeviceSkinProps {
-  skinOverlayUri: string;
   deviceSkin: DeviceSkinType;
-  skinRatio: number;
-  deviceSkinRef: RefObject<HTMLImageElement | null>;
-  onSkinLoad: () => void;
   children: React.ReactNode;
 }
 
-export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({
-  skinOverlayUri,
-  deviceSkin,
-  skinRatio,
-  deviceSkinRef,
-  onSkinLoad,
-  children
-}) => {
-  if (!skinOverlayUri) {
+const percent = (value: number, total: number): string => `${(value / total) * 100}%`;
+
+// Both frame copies use the same intrinsic sizing so they register exactly.
+const frameImageStyle: React.CSSProperties = {
+  display: 'block',
+  height: '100%',
+  width: 'auto',
+  maxWidth: '100%',
+};
+
+export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({ deviceSkin, children }) => {
+  if (!deviceSkin.frameImage) {
     return (
       <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {children}
@@ -26,53 +25,41 @@ export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({
     );
   }
 
+  const { display, frameWidth, frameHeight, frameImage } = deviceSkin;
+
   return (
     <div style={{ position: 'relative', height: '100%' }}>
-      <img
-        ref={deviceSkinRef}
-        src={skinOverlayUri}
-        alt=""
-        style={{
-          position: 'relative',
-          // Height comes from the container (bounded by the host app), not the
-          // viewport. width:auto keeps the skin's aspect ratio.
-          height: '100%',
-          width: 'auto',
-          maxWidth: '100%'
-        }}
-        draggable={false}
-        onLoad={onSkinLoad}
-      />
+      {/* Frame behind: sizes the box; display:block avoids the inline baseline gap. */}
+      <img src={frameImage} alt="" style={frameImageStyle} draggable={false} />
+
+      {/* The live screen, positioned as a percentage of the frame's native size so
+          it scales in lockstep with the rendered frame — no measured ratio, no drift.
+          The two-value border-radius (rx% / ry%) is a *circular* corner_radius that
+          also scales with the element, rounding the stream's square corners so they
+          don't poke past the frame's rounded bezel. */}
       <div
         style={{
           position: 'absolute',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          top: `${deviceSkin.insets.top * skinRatio}px`,
-          left: `${deviceSkin.insets.left * skinRatio}px`,
-          right: `${deviceSkin.insets.right * skinRatio}px`,
-          bottom: `${deviceSkin.insets.bottom * skinRatio}px`,
-          borderRadius: `${deviceSkin.borderRadius * skinRatio}px`,
+          left: percent(display.x, frameWidth),
+          top: percent(display.y, frameHeight),
+          width: percent(display.width, frameWidth),
+          height: percent(display.height, frameHeight),
+          borderRadius: `${percent(display.cornerRadius, display.width)} / ${percent(display.cornerRadius, display.height)}`,
           overflow: 'hidden',
-          zIndex: 1
+          zIndex: 1,
         }}
       >
         {children}
       </div>
+
+      {/* Same frame on top: its opaque bezel covers any stream overhang and draws
+          the rounded corners + camera; its transparent screen hole reveals the
+          stream. Identical to the frame behind, so there is no two-image seam. */}
       <img
-        src={skinOverlayUri}
+        src={frameImage}
         alt=""
-        style={{
-          pointerEvents: 'none',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 2
-        }}
         draggable={false}
+        style={{ ...frameImageStyle, position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 2 }}
       />
     </div>
   );

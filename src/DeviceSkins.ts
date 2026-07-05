@@ -1,74 +1,49 @@
 import { DeviceDescriptor, DevicePlatform } from './types';
+import { pixel9Skin } from './skins/pixel9';
 
-interface DeviceSkinInsets {
-  top: number;
-  left: number;
-  right: number;
-  bottom: number;
+interface DeviceDisplayRect {
+  // All values are in the frame image's native pixels.
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  // Screen corner radius; rounds the stream so its square corners don't poke
+  // past the frame's rounded bezel.
+  cornerRadius: number;
 }
 
 export interface DeviceSkin {
-  imageFilename: string;
-  insets: DeviceSkinInsets;
-  borderRadius: number;
+  // Embedded device frame (data URI): a bezel with a transparent screen hole,
+  // rounded corners, and camera. Empty string means "no skin". Drawn behind the
+  // stream to size the box, and again on top so the bezel covers any overhang.
+  frameImage: string;
+  // Native size of frameImage, used to place the display rect proportionally.
+  frameWidth: number;
+  frameHeight: number;
+  // Where the live screen sits inside the frame, in frame pixels.
+  display: DeviceDisplayRect;
 }
 
 export const NoDeviceSkin: DeviceSkin = {
-  imageFilename: '',
-  insets: { top: 0, left: 0, right: 0, bottom: 0 },
-  borderRadius: 0,
+  frameImage: '',
+  frameWidth: 0,
+  frameHeight: 0,
+  display: { x: 0, y: 0, width: 0, height: 0, cornerRadius: 0 },
 };
 
-export const iPhoneWithIslandSkin: DeviceSkin = {
-  imageFilename: 'iPhone_with_island.png',
-  insets: { top: 21, left: 22, right: 22, bottom: 23 },
-  borderRadius: 49,
-};
-
-export const iPhoneWithNotchSkin: DeviceSkin = {
-  imageFilename: 'iPhone_with_notch.png',
-  insets: { top: 19, left: 24, right: 24, bottom: 18 },
-  borderRadius: 49,
-};
-
-export const AndroidDeviceSkin: DeviceSkin = {
-  imageFilename: 'android.png',
-  insets: { top: 70, left: 70, right: 70, bottom: 75 },
-  borderRadius: 170,
-};
-
-export const iPadSkin: DeviceSkin = {
-  imageFilename: 'iPad_Pro_11.png',
-  insets: { top: 110, left: 115, right: 115, bottom: 110 },
-  borderRadius: 35,
-};
+// ponytail: single hardcoded device for now. iOS + more Android come later,
+// each as another embedded skin returned from here. Match on `model` (the OS
+// hardware id, e.g. "Pixel 9"), not `name` — `name` is a user-assigned label.
+function isPixel9(model: string): boolean {
+  const normalized = model.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  // Match "Pixel 9" but not the Pro / Pro XL / Pro Fold / 9a variants — those
+  // have their own geometry.
+  return /(^|\s)pixel 9(\s|$)/.test(normalized) && !normalized.includes('pixel 9 pro');
+}
 
 export function getDeviceSkinForDevice(device: DeviceDescriptor): DeviceSkin {
-  if (device.platform === DevicePlatform.ANDROID) {
-    return AndroidDeviceSkin;
-  }
-
-  if (device.platform === DevicePlatform.IOS) {
-    if (device.name.includes('iPad')) {
-      return iPadSkin;
-    }
-
-    if (device.name.startsWith('iPhone X')) {
-      return iPhoneWithNotchSkin;
-    }
-
-    const m = device.name.match(/iPhone (\d+)/);
-    if (m) {
-      const modelNumber = parseInt(m[1]);
-      if (modelNumber >= 15) {
-        return iPhoneWithIslandSkin;
-      }
-      if (modelNumber >= 12) {
-        return iPhoneWithNotchSkin;
-      }
-    }
-
-    return iPhoneWithNotchSkin;
+  if (device.platform === DevicePlatform.ANDROID && isPixel9(device.model ?? '')) {
+    return pixel9Skin;
   }
 
   return NoDeviceSkin;
