@@ -22,7 +22,7 @@ var ConnectionError = class extends Error {
     this.name = "ConnectionError";
   }
 };
-var percent = (value, total) => `${value / total * 100}%`;
+var toCssPercent = (value, total) => `${value / total * 100}%`;
 var frameImageStyle = {
   display: "block",
   height: "100%",
@@ -34,6 +34,7 @@ var DeviceSkinComponent = ({ deviceSkin, children }) => {
     return /* @__PURE__ */ jsx("div", { style: { position: "relative", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }, children });
   }
   const { display, frameWidth, frameHeight, frameImage: frameImage2 } = deviceSkin;
+  const screenRadius = `${toCssPercent(display.cornerRadius, display.width)} / ${toCssPercent(display.cornerRadius, display.height)}`;
   return /* @__PURE__ */ jsxs("div", { style: { position: "relative", height: "100%" }, children: [
     /* @__PURE__ */ jsx("img", { src: frameImage2, alt: "", style: frameImageStyle, draggable: false }),
     /* @__PURE__ */ jsx(
@@ -41,11 +42,11 @@ var DeviceSkinComponent = ({ deviceSkin, children }) => {
       {
         style: {
           position: "absolute",
-          left: percent(display.x, frameWidth),
-          top: percent(display.y, frameHeight),
-          width: percent(display.width, frameWidth),
-          height: percent(display.height, frameHeight),
-          borderRadius: `${percent(display.cornerRadius, display.width)} / ${percent(display.cornerRadius, display.height)}`,
+          left: toCssPercent(display.x, frameWidth),
+          top: toCssPercent(display.y, frameHeight),
+          width: toCssPercent(display.width, frameWidth),
+          height: toCssPercent(display.height, frameHeight),
+          borderRadius: screenRadius,
           overflow: "hidden",
           zIndex: 1
         },
@@ -448,12 +449,12 @@ var pixel9Skin = {
 };
 
 // src/DeviceSkins.ts
-var NoDeviceSkin = {
+var NoDeviceSkin = Object.freeze({
   frameImage: "",
   frameWidth: 0,
   frameHeight: 0,
-  display: { x: 0, y: 0, width: 0, height: 0, cornerRadius: 0 }
-};
+  display: Object.freeze({ x: 0, y: 0, width: 0, height: 0, cornerRadius: 0 })
+});
 function isPixel9(model) {
   const normalized = model.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
   return /(^|\s)pixel 9(\s|$)/.test(normalized) && !normalized.includes("pixel 9 pro");

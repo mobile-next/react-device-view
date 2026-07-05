@@ -34,4 +34,10 @@ describe('getDeviceSkinForDevice', () => {
       id: 'x', name: 'iPhone', model: 'iPhone 15', platform: DevicePlatform.IOS, type: DeviceType.SIMULATOR,
     })).toBe(NoDeviceSkin);
   });
+
+  it('handles a device with no model reported', () => {
+    expect(getDeviceSkinForDevice({
+      id: 'x', name: 'TestDeviceName', platform: DevicePlatform.ANDROID, type: DeviceType.REAL,
+    })).toBe(NoDeviceSkin);
+  });
 });

@@ -1,6 +1,6 @@
 # @mobile-next/device-view
 
-React component for remote device streaming, interaction, and control. Renders a live view of an iOS or Android device (WebRTC, AVC, or MJPEG streams) with touch/gesture forwarding, hardware buttons, and optional device skins.
+React component for remote device streaming, interaction, and control. Renders a live view of an iOS or Android device (WebRTC, AVC, or MJPEG streams) with touch/gesture forwarding, hardware buttons, and a device frame skin.
 
 ## Install
 
@@ -28,6 +28,10 @@ import { DeviceView } from '@mobile-next/device-view';
 The component fills its container, so give the parent element a size.
 
 For advanced usage (custom compositions, raw streams, RPC), see the exports in [`src/index.ts`](src/index.ts) — `DeviceInstance`, `DeviceViewport`, `DeviceControls`, `WebRtcStream`, `JsonRpcClient`, and friends.
+
+## Device skins
+
+The frame is selected from the device's reported `model`. Skin coverage is currently limited to the **Pixel 9**; every other device renders the bare stream with no frame. More devices (and iOS) are planned. Skins are embedded in the bundle, so there is no `skinsUrl` to configure (it was removed — this is a breaking change from earlier `0.x` if you relied on hosted skins).
 
 ## Running locally
 
