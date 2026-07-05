@@ -12,6 +12,7 @@ declare enum DeviceType {
 interface DeviceDescriptor {
     id: string;
     name: string;
+    model?: string;
     platform: DevicePlatform;
     type: DeviceType;
     version?: string;
@@ -25,6 +26,7 @@ interface ScreenSize {
 interface DeviceInfo {
     id: string;
     name: string;
+    model?: string;
     platform: string;
     type: string;
     screenSize: ScreenSize;
@@ -55,7 +57,6 @@ interface DeviceViewProps {
     serverUrl: string;
     token: string;
     deviceId: string;
-    skinsUrl?: string;
     showControls?: boolean;
     onError?: (error: Error) => void;
     onConnected?: () => void;
@@ -256,16 +257,18 @@ declare class DeviceClient implements DeviceClientApi {
 }
 declare function createNoOpDeviceClient(): DeviceClientApi;
 
-interface DeviceSkinInsets {
-    top: number;
-    left: number;
-    right: number;
-    bottom: number;
+interface DeviceDisplayRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    cornerRadius: number;
 }
 interface DeviceSkin {
-    imageFilename: string;
-    insets: DeviceSkinInsets;
-    borderRadius: number;
+    frameImage: string;
+    frameWidth: number;
+    frameHeight: number;
+    display: DeviceDisplayRect;
 }
 declare const NoDeviceSkin: DeviceSkin;
 declare function getDeviceSkinForDevice(device: DeviceDescriptor): DeviceSkin;
@@ -284,8 +287,6 @@ declare const DeviceViewport: React.FC<{
     streamMode?: StreamRenderMode;
     videoRef?: Ref<HTMLVideoElement | null>;
     canvasRef: Ref<HTMLCanvasElement>;
-    deviceSkin: DeviceSkin;
-    skinRatio: number;
     state: DeviceState;
 }>;
 
@@ -297,7 +298,6 @@ interface DeviceStreamProps {
     connectProgressMessage?: string;
     selectedDevice: DeviceDescriptor;
     screenSize: ScreenSize;
-    skinOverlayUri: string;
     deviceSkin: DeviceSkin;
     streamMode?: StreamRenderMode;
     videoRef?: React.RefObject<HTMLVideoElement | null>;

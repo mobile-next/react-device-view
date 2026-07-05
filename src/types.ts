@@ -12,6 +12,7 @@ export enum DeviceType {
 export interface DeviceDescriptor {
   id: string;
   name: string;
+  model?: string;
   platform: DevicePlatform;
   type: DeviceType;
   version?: string;
@@ -27,6 +28,7 @@ export interface ScreenSize {
 export interface DeviceInfo {
   id: string;
   name: string;
+  model?: string;
   platform: string;
   type: string;
   screenSize: ScreenSize;
@@ -66,7 +68,6 @@ export interface DeviceViewProps {
   serverUrl: string;
   token: string;
   deviceId: string;
-  skinsUrl?: string;
   showControls?: boolean;
   onError?: (error: Error) => void;
   onConnected?: () => void;

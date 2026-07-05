@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { DeviceDescriptor, ScreenSize, GesturePoint, StreamRenderMode } from './types';
 import { DeviceSkin } from './DeviceSkins';
 import { DeviceSkinComponent } from './DeviceSkin';
@@ -14,7 +14,6 @@ export interface DeviceStreamProps {
   connectProgressMessage?: string;
   selectedDevice: DeviceDescriptor;
   screenSize: ScreenSize;
-  skinOverlayUri: string;
   deviceSkin: DeviceSkin;
   streamMode?: StreamRenderMode;
   videoRef?: React.RefObject<HTMLVideoElement | null>;
@@ -37,7 +36,6 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
   connectProgressMessage,
   selectedDevice,
   screenSize,
-  skinOverlayUri,
   deviceSkin,
   onTap,
   onGesture,
@@ -54,27 +52,11 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
   streamMode = 'canvas',
   videoRef,
 }, ref) => {
-  const [skinRatio, setSkinRatio] = useState<number>(1.0);
-  const deviceSkinRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useImperativeHandle(ref, () => ({
     getCanvas: () => canvasRef.current,
   }));
-
-  const calculateSkinRatio = () => {
-    if (deviceSkinRef.current) {
-      const naturalHeight = deviceSkinRef.current.naturalHeight;
-      const renderedHeight = deviceSkinRef.current.height;
-      const ratio = renderedHeight / naturalHeight;
-      setSkinRatio(ratio);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('resize', calculateSkinRatio);
-    return () => { window.removeEventListener('resize', calculateSkinRatio); };
-  }, []);
 
   return (
     <div
@@ -106,23 +88,15 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
         <div style={{ width: '100%', height: '100%', overflow: 'visible' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'white' }}>
             <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
-              <DeviceSkinComponent
-                skinOverlayUri={skinOverlayUri}
-                deviceSkin={deviceSkin}
-                skinRatio={skinRatio}
-                deviceSkinRef={deviceSkinRef}
-                onSkinLoad={calculateSkinRatio}
-              >
+              <DeviceSkinComponent deviceSkin={deviceSkin}>
                 <DeviceViewport
                   screenSize={screenSize}
                   onTap={onTap}
                   onGesture={onGesture}
                   connectProgressMessage={connectProgressMessage}
                   streamMode={streamMode}
-                  deviceSkin={deviceSkin}
                   canvasRef={canvasRef}
                   videoRef={videoRef}
-                  skinRatio={skinRatio}
                   state={state}
                 />
               </DeviceSkinComponent>
