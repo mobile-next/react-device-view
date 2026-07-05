@@ -6,7 +6,7 @@ export interface DeviceSkinProps {
   children: React.ReactNode;
 }
 
-const percent = (value: number, total: number): string => `${(value / total) * 100}%`;
+export const toCssPercent = (value: number, total: number): string => `${(value / total) * 100}%`;
 
 // Both frame copies use the same intrinsic sizing so they register exactly.
 const frameImageStyle: React.CSSProperties = {
@@ -27,24 +27,26 @@ export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({ deviceSkin, chi
 
   const { display, frameWidth, frameHeight, frameImage } = deviceSkin;
 
+  // A *circular* corner radius (rx% / ry%) that scales with the element, so the
+  // stream's square corners round to the layout's corner_radius and don't poke
+  // past the frame's rounded bezel.
+  const screenRadius = `${toCssPercent(display.cornerRadius, display.width)} / ${toCssPercent(display.cornerRadius, display.height)}`;
+
   return (
     <div style={{ position: 'relative', height: '100%' }}>
       {/* Frame behind: sizes the box; display:block avoids the inline baseline gap. */}
       <img src={frameImage} alt="" style={frameImageStyle} draggable={false} />
 
       {/* The live screen, positioned as a percentage of the frame's native size so
-          it scales in lockstep with the rendered frame — no measured ratio, no drift.
-          The two-value border-radius (rx% / ry%) is a *circular* corner_radius that
-          also scales with the element, rounding the stream's square corners so they
-          don't poke past the frame's rounded bezel. */}
+          it scales in lockstep with the rendered frame — no measured ratio, no drift. */}
       <div
         style={{
           position: 'absolute',
-          left: percent(display.x, frameWidth),
-          top: percent(display.y, frameHeight),
-          width: percent(display.width, frameWidth),
-          height: percent(display.height, frameHeight),
-          borderRadius: `${percent(display.cornerRadius, display.width)} / ${percent(display.cornerRadius, display.height)}`,
+          left: toCssPercent(display.x, frameWidth),
+          top: toCssPercent(display.y, frameHeight),
+          width: toCssPercent(display.width, frameWidth),
+          height: toCssPercent(display.height, frameHeight),
+          borderRadius: screenRadius,
           overflow: 'hidden',
           zIndex: 1,
         }}

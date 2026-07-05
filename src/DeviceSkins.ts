@@ -24,12 +24,14 @@ export interface DeviceSkin {
   display: DeviceDisplayRect;
 }
 
-export const NoDeviceSkin: DeviceSkin = {
+// Frozen: it is a shared value handed out by reference, so freezing prevents a
+// consumer from mutating the library's singleton.
+export const NoDeviceSkin: DeviceSkin = Object.freeze({
   frameImage: '',
   frameWidth: 0,
   frameHeight: 0,
-  display: { x: 0, y: 0, width: 0, height: 0, cornerRadius: 0 },
-};
+  display: Object.freeze({ x: 0, y: 0, width: 0, height: 0, cornerRadius: 0 }),
+});
 
 // ponytail: single hardcoded device for now. iOS + more Android come later,
 // each as another embedded skin returned from here. Match on `model` (the OS
