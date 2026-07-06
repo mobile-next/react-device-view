@@ -8,8 +8,16 @@ function androidDevice(model: string): DeviceDescriptor {
   return { id: 'x', name: 'TestDeviceName', model, platform: DevicePlatform.ANDROID, type: DeviceType.REAL };
 }
 
+function iosDevice(model: string): DeviceDescriptor {
+  return { id: 'x', name: 'TestDeviceName', model, platform: DevicePlatform.IOS, type: DeviceType.REAL };
+}
+
 function hasFrame(model: string): boolean {
   return getDeviceSkinForDevice(androidDevice(model)) !== NoDeviceSkin;
+}
+
+function iosHasFrame(model: string): boolean {
+  return getDeviceSkinForDevice(iosDevice(model)) !== NoDeviceSkin;
 }
 
 describe('getDeviceSkinForDevice', () => {
@@ -39,5 +47,22 @@ describe('getDeviceSkinForDevice', () => {
     expect(getDeviceSkinForDevice({
       id: 'x', name: 'TestDeviceName', platform: DevicePlatform.ANDROID, type: DeviceType.REAL,
     })).toBe(NoDeviceSkin);
+  });
+
+  it('gives the iPhone 16 Pro a frame by marketing name or hardware id', () => {
+    expect(iosHasFrame('iPhone 16 Pro')).toBe(true);
+    expect(iosHasFrame('iPhone17,3')).toBe(true);
+  });
+
+  it('does not confuse it with the Max, the non-Pro, or other model ids', () => {
+    expect(iosHasFrame('iPhone 16 Pro Max')).toBe(false);
+    expect(iosHasFrame('iPhone 16')).toBe(false);
+    expect(iosHasFrame('iPhone 15 Pro')).toBe(false);
+    expect(iosHasFrame('iPhone17,4')).toBe(false);
+  });
+
+  it('does not apply an iOS skin to an Android device of the same model string', () => {
+    expect(hasFrame('iPhone 16 Pro')).toBe(false);
+    expect(hasFrame('iPhone17,3')).toBe(false);
   });
 });

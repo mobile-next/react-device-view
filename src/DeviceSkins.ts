@@ -1,5 +1,6 @@
 import { DeviceDescriptor, DevicePlatform } from './types';
 import { pixel9Skin } from './skins/pixel9';
+import { iphone16ProSkin } from './skins/iphone16pro';
 
 interface DeviceDisplayRect {
   // All values are in the frame image's native pixels.
@@ -33,20 +34,44 @@ export const NoDeviceSkin: DeviceSkin = Object.freeze({
   display: Object.freeze({ x: 0, y: 0, width: 0, height: 0, cornerRadius: 0 }),
 });
 
-// ponytail: single hardcoded device for now. iOS + more Android come later,
-// each as another embedded skin returned from here. Match on `model` (the OS
-// hardware id, e.g. "Pixel 9"), not `name` — `name` is a user-assigned label.
-function isPixel9(model: string): boolean {
-  const normalized = model.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
-  // Match "Pixel 9" but not the Pro / Pro XL / Pro Fold / 9a variants — those
-  // have their own geometry.
-  return /(^|\s)pixel 9(\s|$)/.test(normalized) && !normalized.includes('pixel 9 pro');
+// Match on `model` (the OS hardware id, e.g. "Pixel 9" / "iPhone 16 Pro"), not
+// `name` — `name` is a user-assigned label. Normalize so "_"/"-"/extra spaces
+// in AVD-style names don't defeat the match.
+function normalizeModel(model: string | undefined): string {
+  return (model ?? '').toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-export function getDeviceSkinForDevice(device: DeviceDescriptor): DeviceSkin {
-  if (device.platform === DevicePlatform.ANDROID && isPixel9(device.model ?? '')) {
-    return pixel9Skin;
-  }
+// One entry per supported device. To add a device: drop in a skin data module
+// and add a row here — the selector is closed to modification.
+interface SkinMatch {
+  matches: (device: DeviceDescriptor) => boolean;
+  skin: DeviceSkin;
+}
 
-  return NoDeviceSkin;
+const SKINS: SkinMatch[] = [
+  {
+    // "Pixel 9" but not the Pro / Pro XL / Pro Fold / 9a variants.
+    matches: (d) => {
+      if (d.platform !== DevicePlatform.ANDROID) return false;
+      const m = normalizeModel(d.model);
+      return /(^|\s)pixel 9(\s|$)/.test(m) && !m.includes('pixel 9 pro');
+    },
+    skin: pixel9Skin,
+  },
+  {
+    // iOS often reports an Apple hardware identifier (e.g. "iPhone17,3") rather
+    // than the marketing name, so match either. "iPhone17,3" is what the target
+    // device reports today. (Note: per Apple's mapping that id is the base
+    // iPhone 16; iPhone 16 Pro is iPhone17,1 — revisit if geometry must differ.)
+    matches: (d) => {
+      if (d.platform !== DevicePlatform.IOS) return false;
+      const m = normalizeModel(d.model);
+      return m === 'iphone 16 pro' || m === 'iphone17,3';
+    },
+    skin: iphone16ProSkin,
+  },
+];
+
+export function getDeviceSkinForDevice(device: DeviceDescriptor): DeviceSkin {
+  return SKINS.find((entry) => entry.matches(device))?.skin ?? NoDeviceSkin;
 }
