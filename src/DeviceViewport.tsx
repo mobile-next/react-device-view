@@ -139,7 +139,6 @@ export const DeviceViewport: React.FC<{
     // Fill the box the layout hands us and letterbox to aspect ratio. The host
     // app is responsible for bounding that box (see DeviceInstance height:100%);
     // we no longer size off the viewport, so there is no chrome height to guess.
-    // Corner rounding / camera cutout are handled by the skin mask, not here.
     objectFit: 'contain',
     maxHeight: '100%',
     maxWidth: '100%'

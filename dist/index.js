@@ -31,9 +31,28 @@ var frameImageStyle = {
   width: "auto",
   maxWidth: "100%"
 };
-var DeviceSkinComponent = ({ deviceSkin, children }) => {
+var DeviceSkinComponent = ({ deviceSkin, screenSize, children }) => {
   if (!deviceSkin.frameImage) {
-    return /* @__PURE__ */ jsxRuntime.jsx("div", { style: { position: "relative", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }, children });
+    const hasSize = screenSize.width > 0 && screenSize.height > 0;
+    return /* @__PURE__ */ jsxRuntime.jsx("div", { style: { position: "relative", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ jsxRuntime.jsx(
+      "div",
+      {
+        style: {
+          height: "100%",
+          aspectRatio: hasSize ? `${screenSize.width} / ${screenSize.height}` : void 0,
+          maxWidth: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+          borderRadius: "30px",
+          padding: "5px",
+          background: "#1b1b1b",
+          boxSizing: "border-box"
+        },
+        children
+      }
+    ) });
   }
   const { display, frameWidth, frameHeight, frameImage: frameImage3 } = deviceSkin;
   const screenRadius = `${toCssPercent(display.cornerRadius, display.width)} / ${toCssPercent(display.cornerRadius, display.height)}`;
@@ -290,7 +309,6 @@ var DeviceViewport = ({
     // Fill the box the layout hands us and letterbox to aspect ratio. The host
     // app is responsible for bounding that box (see DeviceInstance height:100%);
     // we no longer size off the viewport, so there is no chrome height to guess.
-    // Corner rounding / camera cutout are handled by the skin mask, not here.
     objectFit: "contain",
     maxHeight: "100%",
     maxWidth: "100%"
@@ -409,7 +427,7 @@ var DeviceInstance = react.forwardRef(({
       tabIndex: 0,
       onKeyDown: (e) => onKeyDown(e.key),
       children: /* @__PURE__ */ jsxRuntime.jsx("div", { style: { position: "relative", height: "100%", overflow: "visible" }, children: /* @__PURE__ */ jsxRuntime.jsx("div", { style: { width: "100%", height: "100%", overflow: "visible" }, children: /* @__PURE__ */ jsxRuntime.jsx("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "white" }, children: /* @__PURE__ */ jsxRuntime.jsxs("div", { style: { position: "relative", height: "100%", display: "flex", alignItems: "center" }, children: [
-        /* @__PURE__ */ jsxRuntime.jsx(DeviceSkinComponent, { deviceSkin, children: /* @__PURE__ */ jsxRuntime.jsx(
+        /* @__PURE__ */ jsxRuntime.jsx(DeviceSkinComponent, { deviceSkin, screenSize, children: /* @__PURE__ */ jsxRuntime.jsx(
           DeviceViewport,
           {
             screenSize,
