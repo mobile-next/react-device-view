@@ -4,6 +4,13 @@ export interface WebRtcSessionInfo {
 	iceServers?: Array<{ urls: string[] | string }>;
 }
 
+// The webrtc-server returns one of these once a session's publisher has left and
+// the session is torn down. This is terminal — unlike "not connected yet, no track
+// available" (transient, which we retry). Retrying a closed session cannot recover it.
+export function isSessionClosedError(message: string): boolean {
+	return /existed but closed|already-closed session/i.test(message);
+}
+
 export interface WebRtcStreamOptions {
 	onTrack: (stream: MediaStream) => void;
 	onError?: (error: Error) => void;
@@ -283,6 +290,14 @@ export class WebRtcStream {
 				return await this.sendOfferToWebrtcServer(url, sessionId);
 			} catch (error) {
 				lastError = error instanceof Error ? error : new Error(String(error));
+
+				// Terminal: the server says the session existed but is already closed —
+				// the device's publisher is gone and won't come back. Retrying just
+				// hammers a dead session; stop now and let start() surface it via onError.
+				if (isSessionClosedError(lastError.message)) {
+					console.error(`device-view: WebRTC session closed, not retrying: ${lastError.message}`);
+					throw lastError;
+				}
 
 				if (attempt < maxRetries) {
 					console.log(`device-view: WebRTC offer attempt ${attempt} failed: ${lastError.message}, retrying`);
