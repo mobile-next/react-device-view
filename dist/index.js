@@ -1174,6 +1174,9 @@ var AvcStream = class {
 };
 
 // src/streams/WebRtcStream.ts
+function isSessionClosedError(message) {
+  return /existed but closed|already-closed session/i.test(message);
+}
 var WebRtcStream = class {
   constructor(session, options) {
     this.session = session;
@@ -1388,6 +1391,10 @@ var WebRtcStream = class {
         return await this.sendOfferToWebrtcServer(url, sessionId);
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
+        if (isSessionClosedError(lastError.message)) {
+          console.error(`device-view: WebRTC session closed, not retrying: ${lastError.message}`);
+          throw lastError;
+        }
         if (attempt < maxRetries) {
           console.log(`device-view: WebRTC offer attempt ${attempt} failed: ${lastError.message}, retrying`);
           await this.sleep(retryIntervalMs);
