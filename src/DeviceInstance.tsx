@@ -88,7 +88,7 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
         <div style={{ width: '100%', height: '100%', overflow: 'visible' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'white' }}>
             <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
-              <DeviceSkinComponent deviceSkin={deviceSkin}>
+              <DeviceSkinComponent deviceSkin={deviceSkin} screenSize={screenSize}>
                 <DeviceViewport
                   screenSize={screenSize}
                   onTap={onTap}

@@ -1,8 +1,10 @@
 import React from 'react';
 import { DeviceSkin as DeviceSkinType } from './DeviceSkins';
+import { ScreenSize } from './types';
 
 export interface DeviceSkinProps {
   deviceSkin: DeviceSkinType;
+  screenSize: ScreenSize;
   children: React.ReactNode;
 }
 
@@ -16,11 +18,32 @@ const frameImageStyle: React.CSSProperties = {
   maxWidth: '100%',
 };
 
-export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({ deviceSkin, children }) => {
+export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({ deviceSkin, screenSize, children }) => {
   if (!deviceSkin.frameImage) {
+    // No frame skin: draw a rounded, padded block at the device's aspect ratio and
+    // put the stream (or the connecting spinner) inside it. Because the box is sized
+    // from screenSize — known before the stream connects — the device shape shows
+    // immediately instead of a bare spinner in empty space.
+    const hasSize = screenSize.width > 0 && screenSize.height > 0;
     return (
       <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {children}
+        <div
+          style={{
+            height: '100%',
+            aspectRatio: hasSize ? `${screenSize.width} / ${screenSize.height}` : undefined,
+            maxWidth: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            borderRadius: '30px',
+            padding: '5px',
+            background: '#1b1b1b',
+            boxSizing: 'border-box',
+          }}
+        >
+          {children}
+        </div>
       </div>
     );
   }
