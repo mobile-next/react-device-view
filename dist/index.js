@@ -112,6 +112,11 @@ var VolumeDownIcon = () => /* @__PURE__ */ jsxRuntime.jsxs("svg", { viewBox: "0 
   /* @__PURE__ */ jsxRuntime.jsx("line", { x1: "23", y1: "9", x2: "17", y2: "15" }),
   /* @__PURE__ */ jsxRuntime.jsx("line", { x1: "17", y1: "9", x2: "23", y2: "15" })
 ] });
+var InstallIcon = () => /* @__PURE__ */ jsxRuntime.jsxs("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", style: { width: "24px", height: "24px" }, children: [
+  /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }),
+  /* @__PURE__ */ jsxRuntime.jsx("polyline", { points: "7 10 12 15 17 10" }),
+  /* @__PURE__ */ jsxRuntime.jsx("line", { x1: "12", y1: "15", x2: "12", y2: "3" })
+] });
 var PowerIcon = () => /* @__PURE__ */ jsxRuntime.jsxs("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", style: { width: "24px", height: "24px" }, children: [
   /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M12 2v10" }),
   /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M18.4 6.6a9 9 0 1 1-12.77.04" })
@@ -182,7 +187,8 @@ var DeviceControls = ({
   onAppSwitch,
   onIncreaseVolume,
   onDecreaseVolume,
-  onTogglePower
+  onTogglePower,
+  onInstallApp
 }) => {
   return /* @__PURE__ */ jsxRuntime.jsxs("div", { style: {
     display: "flex",
@@ -200,7 +206,11 @@ var DeviceControls = ({
     /* @__PURE__ */ jsxRuntime.jsx(ControlSeparator, {}),
     /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onIncreaseVolume || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(VolumeUpIcon, {}), text: "Volume Up" }),
     /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onDecreaseVolume || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(VolumeDownIcon, {}), text: "Volume Down" }),
-    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onTogglePower || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(PowerIcon, {}), text: "Power" })
+    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onTogglePower || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(PowerIcon, {}), text: "Power" }),
+    onInstallApp && /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntime.jsx(ControlSeparator, {}),
+      /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onInstallApp, icon: /* @__PURE__ */ jsxRuntime.jsx(InstallIcon, {}), text: "Install App" })
+    ] })
   ] });
 };
 var DeviceState = /* @__PURE__ */ ((DeviceState3) => {
@@ -392,6 +402,7 @@ var DeviceInstance = react.forwardRef(({
   onIncreaseVolume,
   onDecreaseVolume,
   onTogglePower,
+  onInstallApp,
   showControls = true,
   streamMode = "canvas",
   videoRef
@@ -450,7 +461,8 @@ var DeviceInstance = react.forwardRef(({
             onAppSwitch: selectedDevice.platform === "android" ? onAppSwitch : void 0,
             onIncreaseVolume,
             onDecreaseVolume,
-            onTogglePower
+            onTogglePower,
+            onInstallApp
           }
         )
       ] }) }) }) })
@@ -1633,7 +1645,8 @@ var DeviceView = react.forwardRef(({
   showControls = true,
   onError,
   onConnected,
-  onDisconnected
+  onDisconnected,
+  onInstallApp
 }, ref) => {
   const [deviceState, setDeviceState] = react.useState("UNKNOWN" /* UNKNOWN */);
   const [connectProgressMessage, setConnectProgressMessage] = react.useState(null);
@@ -1936,6 +1949,7 @@ var DeviceView = react.forwardRef(({
       onIncreaseVolume,
       onDecreaseVolume,
       onTogglePower: onPower,
+      onInstallApp,
       showControls
     }
   );
