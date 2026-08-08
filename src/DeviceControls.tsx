@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RotateIcon, CameraIcon, HomeIcon, BackIcon, AppSwitchIcon, VolumeUpIcon, VolumeDownIcon, PowerIcon } from './Icons';
+import { RotateIcon, CameraIcon, HomeIcon, BackIcon, AppSwitchIcon, VolumeUpIcon, VolumeDownIcon, PowerIcon, InstallIcon } from './Icons';
 
 interface DeviceControlsProps {
   onRotateDevice?: () => void;
@@ -10,6 +10,7 @@ interface DeviceControlsProps {
   onIncreaseVolume?: () => void;
   onDecreaseVolume?: () => void;
   onTogglePower?: () => void;
+  onInstallApp?: () => void;
 }
 
 interface ControlButtonProps {
@@ -96,6 +97,7 @@ export const DeviceControls: React.FC<DeviceControlsProps> = ({
   onIncreaseVolume,
   onDecreaseVolume,
   onTogglePower,
+  onInstallApp,
 }) => {
   return (
     <div style={{
@@ -115,6 +117,12 @@ export const DeviceControls: React.FC<DeviceControlsProps> = ({
       <ControlButton onClick={onIncreaseVolume || noop} icon={<VolumeUpIcon />} text="Volume Up" />
       <ControlButton onClick={onDecreaseVolume || noop} icon={<VolumeDownIcon />} text="Volume Down" />
       <ControlButton onClick={onTogglePower || noop} icon={<PowerIcon />} text="Power" />
+      {onInstallApp && (
+        <>
+          <ControlSeparator />
+          <ControlButton onClick={onInstallApp} icon={<InstallIcon />} text="Install App" />
+        </>
+      )}
     </div>
   );
 };

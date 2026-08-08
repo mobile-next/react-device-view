@@ -50,6 +50,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   onError,
   onConnected,
   onDisconnected,
+  onInstallApp,
 }, ref) => {
   const [deviceState, setDeviceState] = useState<DeviceState>(DeviceState.UNKNOWN);
   const [connectProgressMessage, setConnectProgressMessage] = useState<string | null>(null);
@@ -378,6 +379,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
       onIncreaseVolume={onIncreaseVolume}
       onDecreaseVolume={onDecreaseVolume}
       onTogglePower={onPower}
+      onInstallApp={onInstallApp}
       showControls={showControls}
     />
   );

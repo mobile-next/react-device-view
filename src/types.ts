@@ -72,6 +72,7 @@ export interface DeviceViewProps {
   onError?: (error: Error) => void;
   onConnected?: () => void;
   onDisconnected?: () => void;
+  onInstallApp?: () => void;
 }
 
 export interface DeviceViewHandle {
