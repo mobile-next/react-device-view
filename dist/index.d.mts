@@ -61,6 +61,7 @@ interface DeviceViewProps {
     onError?: (error: Error) => void;
     onConnected?: () => void;
     onDisconnected?: () => void;
+    onInstallApp?: () => void;
 }
 interface DeviceViewHandle {
     takeScreenshot: () => void;
@@ -312,6 +313,7 @@ interface DeviceStreamProps {
     onIncreaseVolume?: () => void;
     onDecreaseVolume?: () => void;
     onTogglePower?: () => void;
+    onInstallApp?: () => void;
     showControls?: boolean;
 }
 declare const DeviceInstance: React.ForwardRefExoticComponent<DeviceStreamProps & React.RefAttributes<DeviceStreamHandle>>;
@@ -325,6 +327,7 @@ interface DeviceControlsProps {
     onIncreaseVolume?: () => void;
     onDecreaseVolume?: () => void;
     onTogglePower?: () => void;
+    onInstallApp?: () => void;
 }
 declare const DeviceControls: React.FC<DeviceControlsProps>;
 
