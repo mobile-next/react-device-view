@@ -112,7 +112,6 @@ declare class WebRtcStream {
     private logReceiverStats;
     private setupH264Transceiver;
     private createAndSetOffer;
-    private waitForIceGathering;
     private sendOfferToWebrtcServerWithRetry;
     private sendOfferToWebrtcServer;
     private setRemoteAnswerFromSdp;

@@ -314,12 +314,22 @@ var DeviceViewport = ({
     cursor: "crosshair",
     width: "100%",
     height: "100%",
-    // Fill the box the layout hands us and letterbox to aspect ratio. The host
-    // app is responsible for bounding that box (see DeviceInstance height:100%);
-    // we no longer size off the viewport, so there is no chrome height to guess.
-    objectFit: "contain",
+    // 'fill' instead of 'contain': the host box is already sized to the
+    // device's exact aspect ratio (DeviceSkin computes it from screenSize
+    // before the stream even connects), so there's no letterboxing to do —
+    // 'fill' is visually identical here but a simpler transform for the
+    // browser to composite.
+    objectFit: "fill",
     maxHeight: "100%",
-    maxWidth: "100%"
+    maxWidth: "100%",
+    touchAction: "none",
+    // Hint eager GPU-layer promotion instead of leaving it to Chromium's lazy
+    // default heuristic — the classic translateZ(0)/backface-visibility/
+    // will-change trio, applied from first render so the promotion decision
+    // isn't made (and locked in) before we get a chance to influence it.
+    willChange: "transform",
+    transform: "translateZ(0)",
+    backfaceVisibility: "hidden"
   };
   return /* @__PURE__ */ jsxs(Fragment, { children: [
     (state === "BOOTING" /* BOOTING */ || state === "CONNECTING" /* CONNECTING */) && /* @__PURE__ */ jsx(ViewportSpinner, { message: connectProgressMessage || "Connecting..." }),
@@ -332,6 +342,8 @@ var DeviceViewport = ({
           autoPlay: true,
           playsInline: true,
           muted: true,
+          disableRemotePlayback: true,
+          disablePictureInPicture: true,
           onMouseDown: handleMouseDown,
           onMouseMove: handleMouseMove,
           onMouseUp: handleMouseUp,
@@ -1208,9 +1220,7 @@ var WebRtcStream = class {
       this.createPeerConnection();
       this.setupH264Transceiver();
       await this.createAndSetOffer();
-      console.log("device-view: WebRTC offer created, waiting for ICE gathering");
-      await this.waitForIceGathering();
-      console.log("device-view: ICE gathering complete, sending offer to server");
+      console.log("device-view: WebRTC offer created, sending to server");
       const answerSdp = await this.sendOfferToWebrtcServerWithRetry(this.session.webrtcServerUrl, this.session.sessionId);
       console.log("device-view: received WebRTC answer from server");
       this.offerSent = true;
@@ -1369,24 +1379,6 @@ var WebRtcStream = class {
     }
     const offer = await this.pc.createOffer();
     await this.pc.setLocalDescription(offer);
-  }
-  async waitForIceGathering() {
-    if (!this.pc) {
-      return;
-    }
-    const pc = this.pc;
-    if (pc.iceGatheringState === "complete") {
-      return;
-    }
-    await new Promise((resolve) => {
-      const checkState = () => {
-        if (pc.iceGatheringState === "complete") {
-          pc.removeEventListener("icegatheringstatechange", checkState);
-          resolve();
-        }
-      };
-      pc.addEventListener("icegatheringstatechange", checkState);
-    });
   }
   async sendOfferToWebrtcServerWithRetry(url, sessionId, maxRetries = 30, retryIntervalMs = 1e3) {
     let lastError = null;
