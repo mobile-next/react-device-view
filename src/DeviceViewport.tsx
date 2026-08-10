@@ -136,12 +136,22 @@ export const DeviceViewport: React.FC<{
     cursor: 'crosshair',
     width: '100%',
     height: '100%',
-    // Fill the box the layout hands us and letterbox to aspect ratio. The host
-    // app is responsible for bounding that box (see DeviceInstance height:100%);
-    // we no longer size off the viewport, so there is no chrome height to guess.
-    objectFit: 'contain',
+    // 'fill' instead of 'contain': the host box is already sized to the
+    // device's exact aspect ratio (DeviceSkin computes it from screenSize
+    // before the stream even connects), so there's no letterboxing to do —
+    // 'fill' is visually identical here but a simpler transform for the
+    // browser to composite.
+    objectFit: 'fill',
     maxHeight: '100%',
-    maxWidth: '100%'
+    maxWidth: '100%',
+    touchAction: 'none',
+    // Hint eager GPU-layer promotion instead of leaving it to Chromium's lazy
+    // default heuristic — the classic translateZ(0)/backface-visibility/
+    // will-change trio, applied from first render so the promotion decision
+    // isn't made (and locked in) before we get a chance to influence it.
+    willChange: 'transform',
+    transform: 'translateZ(0)',
+    backfaceVisibility: 'hidden'
   };
 
   return (
@@ -159,6 +169,8 @@ export const DeviceViewport: React.FC<{
               autoPlay
               playsInline
               muted
+              disableRemotePlayback
+              disablePictureInPicture
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
