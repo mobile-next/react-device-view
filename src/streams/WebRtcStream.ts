@@ -61,9 +61,7 @@ export class WebRtcStream {
 			this.createPeerConnection();
 			this.setupH264Transceiver();
 			await this.createAndSetOffer();
-			console.log('device-view: WebRTC offer created, waiting for ICE gathering');
-			await this.waitForIceGathering();
-			console.log('device-view: ICE gathering complete, sending offer to server');
+			console.log('device-view: WebRTC offer created, sending to server');
 
 			const answerSdp = await this.sendOfferToWebrtcServerWithRetry(this.session.webrtcServerUrl, this.session.sessionId);
 			console.log('device-view: received WebRTC answer from server');
@@ -250,29 +248,6 @@ export class WebRtcStream {
 
 		const offer = await this.pc.createOffer();
 		await this.pc.setLocalDescription(offer);
-	}
-
-	private async waitForIceGathering(): Promise<void> {
-		if (!this.pc) {
-			return;
-		}
-
-		const pc = this.pc;
-
-		if (pc.iceGatheringState === 'complete') {
-			return;
-		}
-
-		await new Promise<void>((resolve) => {
-			const checkState = () => {
-				if (pc.iceGatheringState === 'complete') {
-					pc.removeEventListener('icegatheringstatechange', checkState);
-					resolve();
-				}
-			};
-
-			pc.addEventListener('icegatheringstatechange', checkState);
-		});
 	}
 
 	private async sendOfferToWebrtcServerWithRetry(url: string, sessionId: string, maxRetries: number = 30, retryIntervalMs: number = 1000): Promise<string> {
