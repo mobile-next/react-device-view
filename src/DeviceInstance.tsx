@@ -29,6 +29,7 @@ export interface DeviceStreamProps {
   onDecreaseVolume?: () => void;
   onTogglePower?: () => void;
   onInstallApp?: () => void;
+  onOpenUrl?: () => void;
   showControls?: boolean;
 }
 
@@ -50,6 +51,7 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
   onDecreaseVolume,
   onTogglePower,
   onInstallApp,
+  onOpenUrl,
   showControls = true,
   streamMode = 'canvas',
   videoRef,
@@ -114,6 +116,7 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
                   onDecreaseVolume={onDecreaseVolume}
                   onTogglePower={onTogglePower}
                   onInstallApp={onInstallApp}
+                  onOpenUrl={onOpenUrl}
                 />
               )}
             </div>

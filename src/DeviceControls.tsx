@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RotateIcon, CameraIcon, HomeIcon, BackIcon, AppSwitchIcon, VolumeUpIcon, VolumeDownIcon, PowerIcon, InstallIcon } from './Icons';
+import { RotateIcon, CameraIcon, HomeIcon, BackIcon, AppSwitchIcon, VolumeUpIcon, VolumeDownIcon, PowerIcon, InstallIcon, LinkIcon } from './Icons';
 
 interface DeviceControlsProps {
   onRotateDevice?: () => void;
@@ -11,6 +11,7 @@ interface DeviceControlsProps {
   onDecreaseVolume?: () => void;
   onTogglePower?: () => void;
   onInstallApp?: () => void;
+  onOpenUrl?: () => void;
 }
 
 interface ControlButtonProps {
@@ -98,6 +99,7 @@ export const DeviceControls: React.FC<DeviceControlsProps> = ({
   onDecreaseVolume,
   onTogglePower,
   onInstallApp,
+  onOpenUrl,
 }) => {
   return (
     <div style={{
@@ -117,12 +119,9 @@ export const DeviceControls: React.FC<DeviceControlsProps> = ({
       <ControlButton onClick={onIncreaseVolume || noop} icon={<VolumeUpIcon />} text="Volume Up" />
       <ControlButton onClick={onDecreaseVolume || noop} icon={<VolumeDownIcon />} text="Volume Down" />
       <ControlButton onClick={onTogglePower || noop} icon={<PowerIcon />} text="Power" />
-      {onInstallApp && (
-        <>
-          <ControlSeparator />
-          <ControlButton onClick={onInstallApp} icon={<InstallIcon />} text="Install App" />
-        </>
-      )}
+      {(onInstallApp || onOpenUrl) && <ControlSeparator />}
+      {onInstallApp && <ControlButton onClick={onInstallApp} icon={<InstallIcon />} text="Install App" />}
+      {onOpenUrl && <ControlButton onClick={onOpenUrl} icon={<LinkIcon />} text="Open URL" />}
     </div>
   );
 };

@@ -115,6 +115,10 @@ var InstallIcon = () => /* @__PURE__ */ jsxs("svg", { viewBox: "0 0 24 24", fill
   /* @__PURE__ */ jsx("polyline", { points: "7 10 12 15 17 10" }),
   /* @__PURE__ */ jsx("line", { x1: "12", y1: "15", x2: "12", y2: "3" })
 ] });
+var LinkIcon = () => /* @__PURE__ */ jsxs("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", style: { width: "24px", height: "24px" }, children: [
+  /* @__PURE__ */ jsx("path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }),
+  /* @__PURE__ */ jsx("path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" })
+] });
 var PowerIcon = () => /* @__PURE__ */ jsxs("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", style: { width: "24px", height: "24px" }, children: [
   /* @__PURE__ */ jsx("path", { d: "M12 2v10" }),
   /* @__PURE__ */ jsx("path", { d: "M18.4 6.6a9 9 0 1 1-12.77.04" })
@@ -186,7 +190,8 @@ var DeviceControls = ({
   onIncreaseVolume,
   onDecreaseVolume,
   onTogglePower,
-  onInstallApp
+  onInstallApp,
+  onOpenUrl
 }) => {
   return /* @__PURE__ */ jsxs("div", { style: {
     display: "flex",
@@ -205,10 +210,9 @@ var DeviceControls = ({
     /* @__PURE__ */ jsx(ControlButton, { onClick: onIncreaseVolume || noop, icon: /* @__PURE__ */ jsx(VolumeUpIcon, {}), text: "Volume Up" }),
     /* @__PURE__ */ jsx(ControlButton, { onClick: onDecreaseVolume || noop, icon: /* @__PURE__ */ jsx(VolumeDownIcon, {}), text: "Volume Down" }),
     /* @__PURE__ */ jsx(ControlButton, { onClick: onTogglePower || noop, icon: /* @__PURE__ */ jsx(PowerIcon, {}), text: "Power" }),
-    onInstallApp && /* @__PURE__ */ jsxs(Fragment, { children: [
-      /* @__PURE__ */ jsx(ControlSeparator, {}),
-      /* @__PURE__ */ jsx(ControlButton, { onClick: onInstallApp, icon: /* @__PURE__ */ jsx(InstallIcon, {}), text: "Install App" })
-    ] })
+    (onInstallApp || onOpenUrl) && /* @__PURE__ */ jsx(ControlSeparator, {}),
+    onInstallApp && /* @__PURE__ */ jsx(ControlButton, { onClick: onInstallApp, icon: /* @__PURE__ */ jsx(InstallIcon, {}), text: "Install App" }),
+    onOpenUrl && /* @__PURE__ */ jsx(ControlButton, { onClick: onOpenUrl, icon: /* @__PURE__ */ jsx(LinkIcon, {}), text: "Open URL" })
   ] });
 };
 var DeviceState = /* @__PURE__ */ ((DeviceState3) => {
@@ -413,6 +417,7 @@ var DeviceInstance = forwardRef(({
   onDecreaseVolume,
   onTogglePower,
   onInstallApp,
+  onOpenUrl,
   showControls = true,
   streamMode = "canvas",
   videoRef
@@ -472,7 +477,8 @@ var DeviceInstance = forwardRef(({
             onIncreaseVolume,
             onDecreaseVolume,
             onTogglePower,
-            onInstallApp
+            onInstallApp,
+            onOpenUrl
           }
         )
       ] }) }) }) })
@@ -1636,7 +1642,8 @@ var DeviceView = forwardRef(({
   onError,
   onConnected,
   onDisconnected,
-  onInstallApp
+  onInstallApp,
+  onOpenUrl
 }, ref) => {
   const [deviceState, setDeviceState] = useState("UNKNOWN" /* UNKNOWN */);
   const [connectProgressMessage, setConnectProgressMessage] = useState(null);
@@ -1940,6 +1947,7 @@ var DeviceView = forwardRef(({
       onDecreaseVolume,
       onTogglePower: onPower,
       onInstallApp,
+      onOpenUrl,
       showControls
     }
   );
