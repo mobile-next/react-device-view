@@ -73,6 +73,7 @@ export interface DeviceViewProps {
   onConnected?: () => void;
   onDisconnected?: () => void;
   onInstallApp?: () => void;
+  onOpenUrl?: () => void;
 }
 
 export interface DeviceViewHandle {
