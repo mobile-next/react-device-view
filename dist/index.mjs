@@ -1230,8 +1230,8 @@ var WebRtcStream = class {
       const answerSdp = await this.sendOfferToWebrtcServerWithRetry(this.session.webrtcServerUrl, this.session.sessionId);
       console.log("device-view: received WebRTC answer from server");
       this.offerSent = true;
-      await this.flushPendingIceCandidates();
       await this.setRemoteAnswerFromSdp(answerSdp);
+      this.flushPendingIceCandidates();
       console.log("device-view: WebRTC remote description set, waiting for connection");
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -1474,12 +1474,15 @@ var WebRtcStream = class {
       })
     });
   }
-  async flushPendingIceCandidates() {
-    while (this.pendingIceCandidates.length > 0) {
-      const candidate = this.pendingIceCandidates.shift();
-      if (candidate) {
-        await this.sendIceCandidate(candidate);
-      }
+  // Fire-and-forget: candidates are independent of each other, so they go out
+  // in parallel and never gate the caller's progress.
+  flushPendingIceCandidates() {
+    const pending = this.pendingIceCandidates;
+    this.pendingIceCandidates = [];
+    for (const candidate of pending) {
+      this.sendIceCandidate(candidate).catch((error) => {
+        console.error("device-view: error sending queued ICE candidate:", error);
+      });
     }
   }
   sleep(ms) {
