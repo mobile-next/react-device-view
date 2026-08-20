@@ -66,8 +66,11 @@ export class WebRtcStream {
 			const answerSdp = await this.sendOfferToWebrtcServerWithRetry(this.session.webrtcServerUrl, this.session.sessionId);
 			console.log('device-view: received WebRTC answer from server');
 			this.offerSent = true;
-			await this.flushPendingIceCandidates();
+			// Apply the answer first so ICE checking starts immediately — flushing
+			// candidates before it serialized an HTTP round-trip per candidate
+			// (~2s measured) during which the connection couldn't even begin.
 			await this.setRemoteAnswerFromSdp(answerSdp);
+			this.flushPendingIceCandidates();
 			console.log('device-view: WebRTC remote description set, waiting for connection');
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error));
@@ -359,12 +362,15 @@ export class WebRtcStream {
 		});
 	}
 
-	private async flushPendingIceCandidates(): Promise<void> {
-		while (this.pendingIceCandidates.length > 0) {
-			const candidate = this.pendingIceCandidates.shift();
-			if (candidate) {
-				await this.sendIceCandidate(candidate);
-			}
+	// Fire-and-forget: candidates are independent of each other, so they go out
+	// in parallel and never gate the caller's progress.
+	private flushPendingIceCandidates(): void {
+		const pending = this.pendingIceCandidates;
+		this.pendingIceCandidates = [];
+		for (const candidate of pending) {
+			this.sendIceCandidate(candidate).catch((error) => {
+				console.error('device-view: error sending queued ICE candidate:', error);
+			});
 		}
 	}
 
