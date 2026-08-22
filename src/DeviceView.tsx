@@ -49,6 +49,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   showControls = true,
   onError,
   onConnected,
+  onFirstFrame,
   onDisconnected,
   onInstallApp,
   onOpenUrl,
@@ -73,6 +74,13 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   const streamingDeviceIdRef = useRef<string | null>(null);
   const streamGenerationRef = useRef(0);
   const jsonRpcClientRef = useRef<JsonRpcClient | null>(null);
+  const firstFrameSeenRef = useRef(false);
+
+  const markFirstFrame = () => {
+    if (firstFrameSeenRef.current) return;
+    firstFrameSeenRef.current = true;
+    onFirstFrame?.();
+  };
 
   const getOrCreateClient = (): JsonRpcClient => {
     if (!jsonRpcClientRef.current || jsonRpcClientRef.current.isDisconnected) {
@@ -108,6 +116,12 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
     const video = videoRef.current;
     video.srcObject = webrtcMediaStream;
     video.muted = true;
+    // onTrack only means the track arrived; the first decoded frame is the real signal.
+    if (typeof video.requestVideoFrameCallback === 'function') {
+      video.requestVideoFrameCallback(() => markFirstFrame());
+    } else {
+      video.addEventListener('playing', () => markFirstFrame(), { once: true });
+    }
     video.play().catch((error) => {
       console.error('device-view: error playing WebRTC stream:', error);
     });
@@ -136,6 +150,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
       const blob = new Blob([body as Uint8Array<ArrayBuffer>], { type: 'image/jpeg' });
       const newImageBitmap = await createImageBitmap(blob);
       setDeviceState(DeviceState.CONNECTED);
+      markFirstFrame();
       setImageBitmap((prev) => {
         if (prev) prev.close();
         return newImageBitmap;
@@ -165,6 +180,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   const onAvcFrame = async (frame: VideoFrame) => {
     try {
       setDeviceState(DeviceState.CONNECTED);
+      markFirstFrame();
       if (deviceStreamRef.current) {
         const canvas = deviceStreamRef.current.getCanvas();
         if (canvas) {
@@ -195,6 +211,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
     const generation = streamGenerationRef.current;
 
     try {
+      firstFrameSeenRef.current = false;
       setDeviceState(DeviceState.CONNECTING);
 
       const scale = format === 'avc' ? 0.5 : undefined;
