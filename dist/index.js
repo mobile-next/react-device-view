@@ -554,6 +554,14 @@ var noopLogger = {
   }
 };
 var JSON_RPC_VERSION = "2.0";
+function formatJsonRpcError(error) {
+  const message = error.message || "JSON-RPC error";
+  if (error.data === void 0 || error.data === null || error.data === "") {
+    return message;
+  }
+  const detail = typeof error.data === "string" ? error.data : JSON.stringify(error.data);
+  return `${message}: ${detail}`;
+}
 var CONNECTION_TIMEOUT_MS = 1e4;
 var JsonRpcClient = class {
   constructor(url, logger, authToken) {
@@ -704,7 +712,7 @@ var JsonRpcClient = class {
         }
         this.pendingRequests.delete(response.id);
         if (response.error) {
-          pending.reject(new Error(response.error.message || "JSON-RPC error"));
+          pending.reject(new Error(formatJsonRpcError(response.error)));
         } else {
           pending.resolve(response.result);
         }

@@ -19,6 +19,9 @@ export interface JsonRpcResponse<T> {
   error?: {
     code: number;
     message: string;
+    // Optional server-provided detail (e.g. mobilefleet-client's real capture
+    // failure behind a generic "Streaming error").
+    data?: unknown;
   };
 }
 
@@ -48,6 +51,17 @@ interface TokenExchangeResponse {
 }
 
 const JSON_RPC_VERSION = '2.0';
+
+// Builds "<message>: <data>" so the server's detail isn't lost behind a generic
+// message like "Streaming error".
+export function formatJsonRpcError(error: { message?: string; data?: unknown }): string {
+  const message = error.message || 'JSON-RPC error';
+  if (error.data === undefined || error.data === null || error.data === '') {
+    return message;
+  }
+  const detail = typeof error.data === 'string' ? error.data : JSON.stringify(error.data);
+  return `${message}: ${detail}`;
+}
 
 const CONNECTION_TIMEOUT_MS = 10000;
 
@@ -234,7 +248,7 @@ export class JsonRpcClient {
         this.pendingRequests.delete(response.id);
 
         if (response.error) {
-          pending.reject(new Error(response.error.message || 'JSON-RPC error'));
+          pending.reject(new Error(formatJsonRpcError(response.error)));
         } else {
           pending.resolve(response.result);
         }
