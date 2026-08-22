@@ -72,6 +72,9 @@ export interface DeviceViewProps {
   onError?: (error: Error) => void;
   onConnected?: () => void;
   onDisconnected?: () => void;
+  /** Fires once per stream start, when the first frame is actually rendered
+   *  (WebRTC video frame, first AVC frame, or first MJPEG frame). */
+  onFirstFrame?: () => void;
   onInstallApp?: () => void;
   onOpenUrl?: () => void;
 }
