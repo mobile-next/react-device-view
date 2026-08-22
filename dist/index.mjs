@@ -1644,6 +1644,7 @@ var DeviceView = forwardRef(({
   showControls = true,
   onError,
   onConnected,
+  onFirstFrame,
   onDisconnected,
   onInstallApp,
   onOpenUrl
@@ -1667,6 +1668,12 @@ var DeviceView = forwardRef(({
   const streamingDeviceIdRef = useRef(null);
   const streamGenerationRef = useRef(0);
   const jsonRpcClientRef = useRef(null);
+  const firstFrameSeenRef = useRef(false);
+  const markFirstFrame = () => {
+    if (firstFrameSeenRef.current) return;
+    firstFrameSeenRef.current = true;
+    onFirstFrame?.();
+  };
   const getOrCreateClient = () => {
     if (!jsonRpcClientRef.current || jsonRpcClientRef.current.isDisconnected) {
       jsonRpcClientRef.current = new JsonRpcClient(serverUrl, void 0, token);
@@ -1703,6 +1710,11 @@ var DeviceView = forwardRef(({
     const video = videoRef.current;
     video.srcObject = webrtcMediaStream;
     video.muted = true;
+    if (typeof video.requestVideoFrameCallback === "function") {
+      video.requestVideoFrameCallback(() => markFirstFrame());
+    } else {
+      video.addEventListener("playing", () => markFirstFrame(), { once: true });
+    }
     video.play().catch((error) => {
       console.error("device-view: error playing WebRTC stream:", error);
     });
@@ -1728,6 +1740,7 @@ var DeviceView = forwardRef(({
       const blob = new Blob([body], { type: "image/jpeg" });
       const newImageBitmap = await createImageBitmap(blob);
       setDeviceState("CONNECTED" /* CONNECTED */);
+      markFirstFrame();
       setImageBitmap((prev) => {
         if (prev) prev.close();
         return newImageBitmap;
@@ -1754,6 +1767,7 @@ var DeviceView = forwardRef(({
   const onAvcFrame = async (frame) => {
     try {
       setDeviceState("CONNECTED" /* CONNECTED */);
+      markFirstFrame();
       if (deviceStreamRef.current) {
         const canvas = deviceStreamRef.current.getCanvas();
         if (canvas) {
@@ -1781,6 +1795,7 @@ var DeviceView = forwardRef(({
   const startStream = async (devId, format) => {
     const generation = streamGenerationRef.current;
     try {
+      firstFrameSeenRef.current = false;
       setDeviceState("CONNECTING" /* CONNECTING */);
       const scale = format === "avc" ? 0.5 : void 0;
       const client = getDeviceClient();
