@@ -9,6 +9,7 @@ import { MjpegStream } from './streams/MjpegStream';
 import { AvcStream } from './streams/AvcStream';
 import { WebRtcStream, WebRtcSessionInfo } from './streams/WebRtcStream';
 import { useDeviceInteraction } from './hooks/useDeviceInteraction';
+import { BootingDeviceView } from './BootingDeviceView';
 
 interface WebRtcScreencaptureResult {
   sessionId: string;
@@ -46,6 +47,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   serverUrl,
   token,
   deviceId,
+  platform,
   showControls = true,
   onError,
   onConnected,
@@ -61,6 +63,8 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   const [webrtcMediaStream, setWebrtcMediaStream] = useState<MediaStream | null>(null);
   const [deviceSkin, setDeviceSkin] = useState<DeviceSkin>(NoDeviceSkin);
   const [selectedDevice, setSelectedDevice] = useState<DeviceDescriptor | null>(null);
+  // Fake boot screen shown until the first real frame arrives from the stream.
+  const [isBooting, setIsBooting] = useState(true);
 
   const screenSizeRef = useRef<ScreenSize>({ width: 0, height: 0, scale: 1.0 });
   const mjpegStreamRef = useRef<MjpegStream | null>(null);
@@ -79,6 +83,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   const markFirstFrame = () => {
     if (firstFrameSeenRef.current) return;
     firstFrameSeenRef.current = true;
+    setIsBooting(false);
     onFirstFrame?.();
   };
 
@@ -212,6 +217,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
 
     try {
       firstFrameSeenRef.current = false;
+      setIsBooting(true);
       setDeviceState(DeviceState.CONNECTING);
 
       const scale = format === 'avc' ? 0.5 : undefined;
@@ -373,6 +379,12 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   }, []);
 
   if (!selectedDevice) {
+    // Device info hasn't arrived yet. With a platform hint we can keep showing the
+    // booting device (skin + greyed controls) instead of flashing a spinner between
+    // the caller's own placeholder and the live view.
+    if (platform) {
+      return <BootingDeviceView platform={platform} showControls={showControls} />;
+    }
     return <Spinner message="Loading device..." />;
   }
 
@@ -380,6 +392,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
     <DeviceInstance
       ref={deviceStreamRef}
       state={deviceState}
+      isBooting={isBooting}
       connectProgressMessage={connectProgressMessage || undefined}
       selectedDevice={selectedDevice}
       screenSize={screenSizeRef.current}

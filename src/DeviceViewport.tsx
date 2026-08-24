@@ -1,5 +1,6 @@
 import React, { Ref, useRef, useState } from 'react';
 import { ScreenSize, GesturePoint, StreamRenderMode } from './types';
+import { BootScreen } from './BootScreen';
 
 export enum DeviceState {
   UNKNOWN = "UNKNOWN",
@@ -53,6 +54,8 @@ export const DeviceViewport: React.FC<{
   videoRef?: Ref<HTMLVideoElement | null>;
   canvasRef: Ref<HTMLCanvasElement>;
   state: DeviceState;
+  isBooting?: boolean; // fake boot screen until the first stream frame lands
+  platform?: 'ios' | 'android';
 }> = ({
   screenSize,
   onTap,
@@ -61,7 +64,9 @@ export const DeviceViewport: React.FC<{
   streamMode,
   videoRef,
   canvasRef,
-  state
+  state,
+  isBooting,
+  platform,
 }) => {
   const [clicks, setClicks] = useState<ClickAnimation[]>([]);
   const [gestureState, setGestureState] = useState<GestureState>(emptyGestureState);
@@ -156,7 +161,15 @@ export const DeviceViewport: React.FC<{
 
   return (
     <>
-      {(state === DeviceState.BOOTING || state === DeviceState.CONNECTING) && (
+      {/* The boot screen overlays the (mounted but frameless) video/canvas so the
+          stream can decode underneath and the reveal is seamless on first frame. */}
+      {isBooting && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 20 }}>
+          <BootScreen platform={platform ?? 'ios'} />
+        </div>
+      )}
+
+      {!isBooting && (state === DeviceState.BOOTING || state === DeviceState.CONNECTING) && (
         <ViewportSpinner message={connectProgressMessage || 'Connecting...'} />
       )}
 

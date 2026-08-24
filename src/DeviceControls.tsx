@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { RotateIcon, CameraIcon, HomeIcon, BackIcon, AppSwitchIcon, VolumeUpIcon, VolumeDownIcon, PowerIcon, InstallIcon, LinkIcon } from './Icons';
 
 interface DeviceControlsProps {
+  disabled?: boolean; // greyed-out, non-interactive — used while the device is booting
   onRotateDevice?: () => void;
   onTakeScreenshot?: () => void;
   onDeviceHome?: () => void;
@@ -90,6 +91,7 @@ const ControlSeparator: React.FC = () => (
 );
 
 export const DeviceControls: React.FC<DeviceControlsProps> = ({
+  disabled = false,
   onRotateDevice,
   onTakeScreenshot,
   onDeviceHome,
@@ -109,7 +111,8 @@ export const DeviceControls: React.FC<DeviceControlsProps> = ({
       zIndex: 1000,
       marginLeft: '10px',
       position: 'relative',
-      width: '56px'
+      width: '56px',
+      ...(disabled ? { opacity: 0.4, pointerEvents: 'none' as const } : {}),
     }}>
       <ControlButton onClick={onTakeScreenshot || noop} icon={<CameraIcon />} text="Screenshot" />
       <ControlButton onClick={onDeviceHome || noop} icon={<HomeIcon />} text="Home" />

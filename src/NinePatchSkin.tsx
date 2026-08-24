@@ -1,5 +1,6 @@
 import React from 'react';
 import { ScreenSize } from './types';
+import { BootScreen } from './BootScreen';
 
 // A device frame that stretches to any screen aspect ratio. The bezel image is
 // a 9-patch: the four corners are drawn at fixed (scaled) size and the edges are
@@ -7,6 +8,7 @@ import { ScreenSize } from './types';
 // (which must not stretch) are cropped out of the image and drawn back as plain
 // CSS shapes. All numbers are in the image's native pixels.
 export interface NinePatchSkin {
+  platform: 'ios' | 'android'; // picks the boot animation when isBooting
   image: string; // data URI, transparent screen hole
   imageWidth: number;
   imageHeight: number;
@@ -19,6 +21,7 @@ export interface NinePatchSkin {
 export interface NinePatchSkinProps {
   skin: NinePatchSkin;
   screenSize: ScreenSize; // device pixels; only the aspect ratio is used
+  isBooting?: boolean; // show a fake boot screen instead of the children
   children: React.ReactNode;
 }
 
@@ -54,7 +57,7 @@ export function mapButtonTop(skin: NinePatchSkin, frameHeight: number, button: {
   return Math.min(Math.max(center - button.height / 2, slice), frameHeight - slice - button.height);
 }
 
-export const NinePatchSkinView: React.FC<NinePatchSkinProps> = ({ skin, screenSize, children }) => {
+export const NinePatchSkinView: React.FC<NinePatchSkinProps> = ({ skin, screenSize, isBooting, children }) => {
   const frame = nativeFrameSize(skin, screenSize);
   const { bezel, slice } = skin;
   // Largest frame that fits the parent while keeping the native aspect; --s is
@@ -86,7 +89,7 @@ export const NinePatchSkinView: React.FC<NinePatchSkinProps> = ({ skin, screenSi
             zIndex: 1,
           }}
         >
-          {children}
+          {isBooting ? <BootScreen platform={skin.platform} /> : children}
         </div>
         {/* The 9-patch bezel, on top so it covers any stream overhang. */}
         <div
