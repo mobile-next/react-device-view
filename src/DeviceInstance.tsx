@@ -1,5 +1,5 @@
 import React, { useRef, forwardRef, useImperativeHandle } from 'react';
-import { DeviceDescriptor, ScreenSize, GesturePoint, StreamRenderMode } from './types';
+import { DeviceDescriptor, DevicePlatform, ScreenSize, GesturePoint, StreamRenderMode } from './types';
 import { DeviceSkin } from './DeviceSkins';
 import { DeviceSkinComponent } from './DeviceSkin';
 import { DeviceControls } from './DeviceControls';
@@ -17,6 +17,7 @@ export interface DeviceStreamProps {
   deviceSkin: DeviceSkin;
   streamMode?: StreamRenderMode;
   videoRef?: React.RefObject<HTMLVideoElement | null>;
+  isBooting?: boolean; // show a fake boot screen over the stream until frames arrive
   onTap: (x: number, y: number) => void;
   onGesture: (points: Array<GesturePoint>) => void;
   onKeyDown: (key: string) => void;
@@ -55,6 +56,7 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
   showControls = true,
   streamMode = 'canvas',
   videoRef,
+  isBooting,
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -102,6 +104,8 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
                   canvasRef={canvasRef}
                   videoRef={videoRef}
                   state={state}
+                  isBooting={isBooting}
+                  platform={selectedDevice.platform === DevicePlatform.ANDROID ? 'android' : 'ios'}
                 />
               </DeviceSkinComponent>
 

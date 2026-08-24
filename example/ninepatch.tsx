@@ -51,6 +51,7 @@ function App() {
   const [width, setWidth] = useState(300);
   const [height, setHeight] = useState(650);
   const [platform, setPlatform] = useState<keyof typeof SKINS>('ios');
+  const [isBooting, setIsBooting] = useState(false);
   const { skin, presets } = SKINS[platform];
   const screenSize = { width, height, scale: 1 };
   const frame = nativeFrameSize(skin, screenSize);
@@ -73,11 +74,12 @@ function App() {
             {presets.map(([name], i) => <option key={name} value={i}>{name}</option>)}
           </select>
         </label>
+        <label>booting <input type="checkbox" checked={isBooting} onChange={(e) => setIsBooting(e.target.checked)} /></label>
         <span>aspect {(width / height).toFixed(3)}</span>
       </div>
       <div id="stage">
         <div style={{ width: frame.width * scale, height: frame.height * scale }}>
-          <NinePatchSkinView skin={skin} screenSize={screenSize}>
+          <NinePatchSkinView skin={skin} screenSize={screenSize} isBooting={isBooting}>
             <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#4facfe,#00f2fe)', display: 'grid', placeItems: 'center', color: '#fff', fontSize: 24 }}>
               {width}×{height}
             </div>

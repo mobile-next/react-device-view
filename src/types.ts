@@ -68,6 +68,10 @@ export interface DeviceViewProps {
   serverUrl: string;
   token: string;
   deviceId: string;
+  /** Platform hint so the boot screen (device skin + boot animation) can render
+   *  immediately, before device info arrives. Without it that window shows a
+   *  plain loading spinner. */
+  platform?: 'ios' | 'android';
   showControls?: boolean;
   onError?: (error: Error) => void;
   onConnected?: () => void;

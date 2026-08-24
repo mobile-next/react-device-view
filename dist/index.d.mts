@@ -57,6 +57,10 @@ interface DeviceViewProps {
     serverUrl: string;
     token: string;
     deviceId: string;
+    /** Platform hint so the boot screen (device skin + boot animation) can render
+     *  immediately, before device info arrives. Without it that window shows a
+     *  plain loading spinner. */
+    platform?: 'ios' | 'android';
     showControls?: boolean;
     onError?: (error: Error) => void;
     onConnected?: () => void;
@@ -262,6 +266,7 @@ declare class DeviceClient implements DeviceClientApi {
 declare function createNoOpDeviceClient(): DeviceClientApi;
 
 interface NinePatchSkin {
+    platform: 'ios' | 'android';
     image: string;
     imageWidth: number;
     imageHeight: number;
@@ -283,6 +288,7 @@ interface NinePatchSkin {
 interface NinePatchSkinProps {
     skin: NinePatchSkin;
     screenSize: ScreenSize;
+    isBooting?: boolean;
     children: React.ReactNode;
 }
 declare function nativeScreenSlot(skin: NinePatchSkin, screenSize: ScreenSize): {
@@ -320,6 +326,17 @@ declare const iosNinePatchSkin: NinePatchSkin;
 
 declare const androidNinePatchSkin: NinePatchSkin;
 
+interface BootScreenProps {
+    platform: 'ios' | 'android';
+}
+declare const BootScreen: React.FC<BootScreenProps>;
+
+interface BootingDeviceViewProps {
+    platform: 'ios' | 'android';
+    showControls?: boolean;
+}
+declare const BootingDeviceView: React.FC<BootingDeviceViewProps>;
+
 declare enum DeviceState {
     UNKNOWN = "UNKNOWN",
     BOOTING = "BOOTING",
@@ -335,6 +352,8 @@ declare const DeviceViewport: React.FC<{
     videoRef?: Ref<HTMLVideoElement | null>;
     canvasRef: Ref<HTMLCanvasElement>;
     state: DeviceState;
+    isBooting?: boolean;
+    platform?: 'ios' | 'android';
 }>;
 
 interface DeviceStreamHandle {
@@ -348,6 +367,7 @@ interface DeviceStreamProps {
     deviceSkin: DeviceSkin;
     streamMode?: StreamRenderMode;
     videoRef?: React.RefObject<HTMLVideoElement | null>;
+    isBooting?: boolean;
     onTap: (x: number, y: number) => void;
     onGesture: (points: Array<GesturePoint>) => void;
     onKeyDown: (key: string) => void;
@@ -366,6 +386,7 @@ interface DeviceStreamProps {
 declare const DeviceInstance: React.ForwardRefExoticComponent<DeviceStreamProps & React.RefAttributes<DeviceStreamHandle>>;
 
 interface DeviceControlsProps {
+    disabled?: boolean;
     onRotateDevice?: () => void;
     onTakeScreenshot?: () => void;
     onDeviceHome?: () => void;
@@ -379,4 +400,4 @@ interface DeviceControlsProps {
 }
 declare const DeviceControls: React.FC<DeviceControlsProps>;
 
-export { AvcStream, type ButtonType, ConnectionError, DeviceClient, type DeviceClientApi, DeviceControls, type DeviceDescriptor, type DeviceInfo, type DeviceInfoResponse, DeviceInstance, DevicePlatform, type DeviceSkin, DeviceState, type DeviceStreamHandle, type DeviceStreamProps, DeviceType, DeviceView, type DeviceViewHandle, type DeviceViewProps, DeviceViewport, type GesturePoint, JsonRpcClient, MjpegStream, type NinePatchSkin, NinePatchSkinView, NoDeviceSkin, type ScreenCaptureFormat, type ScreenSize, type ScreencaptureResponse, type ScreenshotResponse, type StreamRenderMode, type WebRtcSessionInfo, WebRtcStream, type WebRtcStreamOptions, androidNinePatchSkin, createNoOpDeviceClient, getDeviceSkinForDevice, iosNinePatchSkin, mapButtonTop, nativeFrameSize, nativeScreenSlot };
+export { AvcStream, BootScreen, type BootScreenProps, BootingDeviceView, type BootingDeviceViewProps, type ButtonType, ConnectionError, DeviceClient, type DeviceClientApi, DeviceControls, type DeviceDescriptor, type DeviceInfo, type DeviceInfoResponse, DeviceInstance, DevicePlatform, type DeviceSkin, DeviceState, type DeviceStreamHandle, type DeviceStreamProps, DeviceType, DeviceView, type DeviceViewHandle, type DeviceViewProps, DeviceViewport, type GesturePoint, JsonRpcClient, MjpegStream, type NinePatchSkin, NinePatchSkinView, NoDeviceSkin, type ScreenCaptureFormat, type ScreenSize, type ScreencaptureResponse, type ScreenshotResponse, type StreamRenderMode, type WebRtcSessionInfo, WebRtcStream, type WebRtcStreamOptions, androidNinePatchSkin, createNoOpDeviceClient, getDeviceSkinForDevice, iosNinePatchSkin, mapButtonTop, nativeFrameSize, nativeScreenSlot };
