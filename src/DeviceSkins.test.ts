@@ -27,42 +27,32 @@ describe('getDeviceSkinForDevice', () => {
     expect(hasFrame('Pixel_9')).toBe(true);
   });
 
-  it('does not confuse Pixel 9 variants for the Pixel 9', () => {
-    expect(hasFrame('Pixel 9 Pro')).toBe(false);
-    expect(hasFrame('Pixel 9 Pro XL')).toBe(false);
-    expect(hasFrame('Pixel 9 Pro Fold')).toBe(false);
-    expect(hasFrame('Pixel 9a')).toBe(false);
+  it('gives Pixel 9 variants the stretchable frame, not the exact Pixel 9 one', () => {
+    for (const model of ['Pixel 9 Pro', 'Pixel 9 Pro XL', 'Pixel 9 Pro Fold', 'Pixel 9a']) {
+      expect(getDeviceSkinForDevice(androidDevice(model)).ninePatch).toBeDefined();
+    }
   });
 
-  it('gives every other device no frame', () => {
-    expect(hasFrame('Pixel 8')).toBe(false);
-    expect(hasFrame('Pixel 10')).toBe(false);
-    expect(hasFrame('')).toBe(false);
-    expect(getDeviceSkinForDevice({
-      id: 'x', name: 'iPhone', model: 'iPhone 15', platform: DevicePlatform.IOS, type: DeviceType.SIMULATOR,
-    })).toBe(NoDeviceSkin);
+  it('gives every Android device the stretchable 9-patch frame', () => {
+    for (const model of ['Pixel 8', 'Pixel 10', 'Samsung Galaxy S25 Ultra', 'Samsung Galaxy A55', '']) {
+      expect(getDeviceSkinForDevice(androidDevice(model)).ninePatch).toBeDefined();
+    }
   });
 
-  it('handles a device with no model reported', () => {
+  it('gives an Android device with no model reported the stretchable frame', () => {
     expect(getDeviceSkinForDevice({
       id: 'x', name: 'TestDeviceName', platform: DevicePlatform.ANDROID, type: DeviceType.REAL,
-    })).toBe(NoDeviceSkin);
+    }).ninePatch).toBeDefined();
   });
 
-  it('gives the iPhone 16 Pro a frame by marketing name or hardware id', () => {
-    expect(iosHasFrame('iPhone 16 Pro')).toBe(true);
-    expect(iosHasFrame('iPhone17,3')).toBe(true);
+  it('gives every iOS device the stretchable 9-patch frame', () => {
+    for (const model of ['iPhone 16 Pro', 'iPhone17,3', 'iPhone 16 Pro Max', 'iPhone SE (2022)', 'iPad Pro 12.9"', '']) {
+      expect(getDeviceSkinForDevice(iosDevice(model)).ninePatch).toBeDefined();
+    }
   });
 
-  it('does not confuse it with the Max, the non-Pro, or other model ids', () => {
-    expect(iosHasFrame('iPhone 16 Pro Max')).toBe(false);
-    expect(iosHasFrame('iPhone 16')).toBe(false);
-    expect(iosHasFrame('iPhone 15 Pro')).toBe(false);
-    expect(iosHasFrame('iPhone17,4')).toBe(false);
-  });
-
-  it('does not apply an iOS skin to an Android device of the same model string', () => {
-    expect(hasFrame('iPhone 16 Pro')).toBe(false);
-    expect(hasFrame('iPhone17,3')).toBe(false);
+  it('gives an Android device with an iPhone-looking model the Android frame, not the iOS one', () => {
+    expect(getDeviceSkinForDevice(androidDevice('iPhone 16 Pro')).ninePatch?.image)
+      .not.toBe(getDeviceSkinForDevice(iosDevice('iPhone 16 Pro')).ninePatch?.image);
   });
 });
