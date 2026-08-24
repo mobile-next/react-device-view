@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>9-patch iOS skin</title>
+    <style>
+      body { margin: 0; font: 14px system-ui, sans-serif; background: #e9e9ee; color: #222; }
+      #controls { display: flex; gap: 16px; align-items: center; padding: 12px 16px; background: #fff; border-bottom: 1px solid #ccc; flex-wrap: wrap; }
+      #stage { height: calc(100vh - 56px); display: grid; place-items: center; }
+      label { display: flex; gap: 6px; align-items: center; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/ninepatch.tsx"></script>
+  </body>
+</html>

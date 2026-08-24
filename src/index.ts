@@ -37,6 +37,10 @@ export type { DeviceClientApi } from './rpc/DeviceClient';
 // Device skins (for custom skin rendering)
 export { getDeviceSkinForDevice, NoDeviceSkin } from './DeviceSkins';
 export type { DeviceSkin } from './DeviceSkins';
+export { NinePatchSkinView, nativeFrameSize, nativeScreenSlot, mapButtonTop } from './NinePatchSkin';
+export type { NinePatchSkin } from './NinePatchSkin';
+export { iosNinePatchSkin } from './skins/iosNinePatch';
+export { androidNinePatchSkin } from './skins/androidNinePatch';
 
 // Sub-components (for custom compositions)
 export { DeviceInstance } from './DeviceInstance';

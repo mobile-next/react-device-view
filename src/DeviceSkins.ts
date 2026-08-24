@@ -1,6 +1,8 @@
 import { DeviceDescriptor, DevicePlatform } from './types';
 import { pixel9Skin } from './skins/pixel9';
-import { iphone16ProSkin } from './skins/iphone16pro';
+import { iosNinePatchSkin } from './skins/iosNinePatch';
+import { androidNinePatchSkin } from './skins/androidNinePatch';
+import type { NinePatchSkin } from './NinePatchSkin';
 
 interface DeviceDisplayRect {
   // All values are in the frame image's native pixels.
@@ -23,6 +25,9 @@ export interface DeviceSkin {
   frameHeight: number;
   // Where the live screen sits inside the frame, in frame pixels.
   display: DeviceDisplayRect;
+  // Stretchable frame for devices without a pixel-exact frameImage; when set,
+  // the fields above are ignored.
+  ninePatch?: NinePatchSkin;
 }
 
 // Frozen: it is a shared value handed out by reference, so freezing prevents a
@@ -59,16 +64,14 @@ const SKINS: SkinMatch[] = [
     skin: pixel9Skin,
   },
   {
-    // iOS often reports an Apple hardware identifier (e.g. "iPhone17,3") rather
-    // than the marketing name, so match either. "iPhone17,3" is what the target
-    // device reports today. (Note: per Apple's mapping that id is the base
-    // iPhone 16; iPhone 16 Pro is iPhone17,1 — revisit if geometry must differ.)
-    matches: (d) => {
-      if (d.platform !== DevicePlatform.IOS) return false;
-      const m = normalizeModel(d.model);
-      return m === 'iphone 16 pro' || m === 'iphone17,3';
-    },
-    skin: iphone16ProSkin,
+    // Every other Android device: stretchable 9-patch frame (Pixel-9-derived).
+    matches: (d) => d.platform === DevicePlatform.ANDROID,
+    skin: { ...NoDeviceSkin, ninePatch: androidNinePatchSkin },
+  },
+  {
+    // Every iOS device: the 9-patch frame stretches to any screen aspect ratio.
+    matches: (d) => d.platform === DevicePlatform.IOS,
+    skin: { ...NoDeviceSkin, ninePatch: iosNinePatchSkin },
   },
 ];
 

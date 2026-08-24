@@ -1,6 +1,7 @@
 import React from 'react';
 import { DeviceSkin as DeviceSkinType } from './DeviceSkins';
 import { ScreenSize } from './types';
+import { NinePatchSkinView } from './NinePatchSkin';
 
 export interface DeviceSkinProps {
   deviceSkin: DeviceSkinType;
@@ -19,6 +20,9 @@ const frameImageStyle: React.CSSProperties = {
 };
 
 export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({ deviceSkin, screenSize, children }) => {
+  if (deviceSkin.ninePatch) {
+    return <NinePatchSkinView skin={deviceSkin.ninePatch} screenSize={screenSize}>{children}</NinePatchSkinView>;
+  }
   if (!deviceSkin.frameImage) {
     // No frame skin: draw a rounded, padded block at the device's aspect ratio and
     // put the stream (or the connecting spinner) inside it. Because the box is sized

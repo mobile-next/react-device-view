@@ -31,7 +31,7 @@ For advanced usage (custom compositions, raw streams, RPC), see the exports in [
 
 ## Device skins
 
-The frame is selected from the device's reported `model`. Skin coverage is currently limited to the **Pixel 9**; every other device renders the bare stream with no frame. More devices (and iOS) are planned. Skins are embedded in the bundle, so there is no `skinsUrl` to configure (it was removed — this is a breaking change from earlier `0.x` if you relied on hosted skins).
+The frame is selected from the device's reported `model`. The **Pixel 9** has a pixel-exact frame; **every iOS device** gets a stretchable 9-patch iPhone frame and **every other Android device** a stretchable 9-patch Pixel-style frame (`NinePatchSkinView`), each adapting to any screen aspect ratio — from iPhone SE to iPad Pro, from a budget 720p phone to a Galaxy Ultra. To eyeball the 9-patch at arbitrary sizes, run `npm run example` and open `/ninepatch.html`. Skins are embedded in the bundle, so there is no `skinsUrl` to configure (it was removed — this is a breaking change from earlier `0.x` if you relied on hosted skins).
 
 ## Running locally
 

@@ -261,6 +261,44 @@ declare class DeviceClient implements DeviceClientApi {
 }
 declare function createNoOpDeviceClient(): DeviceClientApi;
 
+interface NinePatchSkin {
+    image: string;
+    imageWidth: number;
+    imageHeight: number;
+    slice: number;
+    bezel: {
+        top: number;
+        right: number;
+        bottom: number;
+        left: number;
+    };
+    screenCornerRadius: number;
+    buttons: {
+        side: 'left' | 'right';
+        top: number;
+        height: number;
+        depth: number;
+    }[];
+}
+interface NinePatchSkinProps {
+    skin: NinePatchSkin;
+    screenSize: ScreenSize;
+    children: React.ReactNode;
+}
+declare function nativeScreenSlot(skin: NinePatchSkin, screenSize: ScreenSize): {
+    width: number;
+    height: number;
+};
+declare function nativeFrameSize(skin: NinePatchSkin, screenSize: ScreenSize): {
+    width: number;
+    height: number;
+};
+declare function mapButtonTop(skin: NinePatchSkin, frameHeight: number, button: {
+    top: number;
+    height: number;
+}): number;
+declare const NinePatchSkinView: React.FC<NinePatchSkinProps>;
+
 interface DeviceDisplayRect {
     x: number;
     y: number;
@@ -273,9 +311,14 @@ interface DeviceSkin {
     frameWidth: number;
     frameHeight: number;
     display: DeviceDisplayRect;
+    ninePatch?: NinePatchSkin;
 }
 declare const NoDeviceSkin: DeviceSkin;
 declare function getDeviceSkinForDevice(device: DeviceDescriptor): DeviceSkin;
+
+declare const iosNinePatchSkin: NinePatchSkin;
+
+declare const androidNinePatchSkin: NinePatchSkin;
 
 declare enum DeviceState {
     UNKNOWN = "UNKNOWN",
@@ -336,4 +379,4 @@ interface DeviceControlsProps {
 }
 declare const DeviceControls: React.FC<DeviceControlsProps>;
 
-export { AvcStream, type ButtonType, ConnectionError, DeviceClient, type DeviceClientApi, DeviceControls, type DeviceDescriptor, type DeviceInfo, type DeviceInfoResponse, DeviceInstance, DevicePlatform, type DeviceSkin, DeviceState, type DeviceStreamHandle, type DeviceStreamProps, DeviceType, DeviceView, type DeviceViewHandle, type DeviceViewProps, DeviceViewport, type GesturePoint, JsonRpcClient, MjpegStream, NoDeviceSkin, type ScreenCaptureFormat, type ScreenSize, type ScreencaptureResponse, type ScreenshotResponse, type StreamRenderMode, type WebRtcSessionInfo, WebRtcStream, type WebRtcStreamOptions, createNoOpDeviceClient, getDeviceSkinForDevice };
+export { AvcStream, type ButtonType, ConnectionError, DeviceClient, type DeviceClientApi, DeviceControls, type DeviceDescriptor, type DeviceInfo, type DeviceInfoResponse, DeviceInstance, DevicePlatform, type DeviceSkin, DeviceState, type DeviceStreamHandle, type DeviceStreamProps, DeviceType, DeviceView, type DeviceViewHandle, type DeviceViewProps, DeviceViewport, type GesturePoint, JsonRpcClient, MjpegStream, type NinePatchSkin, NinePatchSkinView, NoDeviceSkin, type ScreenCaptureFormat, type ScreenSize, type ScreencaptureResponse, type ScreenshotResponse, type StreamRenderMode, type WebRtcSessionInfo, WebRtcStream, type WebRtcStreamOptions, androidNinePatchSkin, createNoOpDeviceClient, getDeviceSkinForDevice, iosNinePatchSkin, mapButtonTop, nativeFrameSize, nativeScreenSlot };
