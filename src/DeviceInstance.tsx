@@ -34,101 +34,122 @@ export interface DeviceStreamProps {
   showControls?: boolean;
 }
 
-export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(({
-  state,
-  connectProgressMessage,
-  selectedDevice,
-  screenSize,
-  deviceSkin,
-  onTap,
-  onGesture,
-  onKeyDown,
-  onRotateDevice,
-  onTakeScreenshot,
-  onDeviceHome,
-  onDeviceBack,
-  onAppSwitch,
-  onIncreaseVolume,
-  onDecreaseVolume,
-  onTogglePower,
-  onInstallApp,
-  onOpenUrl,
-  showControls = true,
-  streamMode = 'canvas',
-  videoRef,
-  isBooting,
-}, ref) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
+  (
+    {
+      state,
+      connectProgressMessage,
+      selectedDevice,
+      screenSize,
+      deviceSkin,
+      onTap,
+      onGesture,
+      onKeyDown,
+      onRotateDevice,
+      onTakeScreenshot,
+      onDeviceHome,
+      onDeviceBack,
+      onAppSwitch,
+      onIncreaseVolume,
+      onDecreaseVolume,
+      onTogglePower,
+      onInstallApp,
+      onOpenUrl,
+      showControls = true,
+      streamMode = 'canvas',
+      videoRef,
+      isBooting,
+    },
+    ref,
+  ) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useImperativeHandle(ref, () => ({
-    getCanvas: () => canvasRef.current,
-  }));
+    useImperativeHandle(ref, () => ({
+      getCanvas: () => canvasRef.current,
+    }));
 
-  return (
-    <div
-      style={{
-        position: 'relative',
-        flexGrow: 1,
-        // height:100% lets this fill the (bounded) box the host gives us, so the
-        // definite height propagates all the way down to the video/skin. Without
-        // it every wrapper is content-sized and we'd be forced back to viewport units.
-        height: '100%',
-        // border-box keeps the 24px padding *inside* height:100%. Under the
-        // default content-box the padding is added on top, so the element renders
-        // 48px taller than the host's box and overflows it — bleeding over the
-        // chrome above and pushing the bottom padding out of view.
-        boxSizing: 'border-box',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'visible',
-        backgroundColor: '#202224',
-        paddingTop: '24px',
-        paddingBottom: '24px',
-        outline: 'none',
-      }}
-      tabIndex={0}
-      onKeyDown={(e) => onKeyDown(e.key)}
-    >
-      <div style={{ position: 'relative', height: '100%', overflow: 'visible' }}>
-        <div style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'white' }}>
-            <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
-              <DeviceSkinComponent deviceSkin={deviceSkin} screenSize={screenSize}>
-                <DeviceViewport
-                  screenSize={screenSize}
-                  onTap={onTap}
-                  onGesture={onGesture}
-                  connectProgressMessage={connectProgressMessage}
-                  streamMode={streamMode}
-                  canvasRef={canvasRef}
-                  videoRef={videoRef}
-                  state={state}
-                  isBooting={isBooting}
-                  platform={selectedDevice.platform === DevicePlatform.ANDROID ? 'android' : 'ios'}
-                />
-              </DeviceSkinComponent>
+    return (
+      <div
+        style={{
+          position: 'relative',
+          flexGrow: 1,
+          // height:100% lets this fill the (bounded) box the host gives us, so the
+          // definite height propagates all the way down to the video/skin. Without
+          // it every wrapper is content-sized and we'd be forced back to viewport units.
+          height: '100%',
+          // border-box keeps the 24px padding *inside* height:100%. Under the
+          // default content-box the padding is added on top, so the element renders
+          // 48px taller than the host's box and overflows it — bleeding over the
+          // chrome above and pushing the bottom padding out of view.
+          boxSizing: 'border-box',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'visible',
+          backgroundColor: '#202224',
+          paddingTop: '24px',
+          paddingBottom: '24px',
+          outline: 'none',
+        }}
+        tabIndex={0}
+        onKeyDown={(e) => onKeyDown(e.key)}
+      >
+        <div style={{ position: 'relative', height: '100%', overflow: 'visible' }}>
+          <div style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                color: 'white',
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <DeviceSkinComponent deviceSkin={deviceSkin} screenSize={screenSize}>
+                  <DeviceViewport
+                    screenSize={screenSize}
+                    onTap={onTap}
+                    onGesture={onGesture}
+                    connectProgressMessage={connectProgressMessage}
+                    streamMode={streamMode}
+                    canvasRef={canvasRef}
+                    videoRef={videoRef}
+                    state={state}
+                    isBooting={isBooting}
+                    platform={selectedDevice.platform === DevicePlatform.ANDROID ? 'android' : 'ios'}
+                  />
+                </DeviceSkinComponent>
 
-              {showControls && (
-                <DeviceControls
-                  onRotateDevice={onRotateDevice}
-                  onTakeScreenshot={onTakeScreenshot}
-                  onDeviceHome={onDeviceHome}
-                  onDeviceBack={selectedDevice.platform === 'android' ? onDeviceBack : undefined}
-                  onAppSwitch={selectedDevice.platform === 'android' ? onAppSwitch : undefined}
-                  onIncreaseVolume={onIncreaseVolume}
-                  onDecreaseVolume={onDecreaseVolume}
-                  onTogglePower={onTogglePower}
-                  onInstallApp={onInstallApp}
-                  onOpenUrl={onOpenUrl}
-                />
-              )}
+                {showControls && (
+                  <DeviceControls
+                    onRotateDevice={onRotateDevice}
+                    onTakeScreenshot={onTakeScreenshot}
+                    onDeviceHome={onDeviceHome}
+                    onDeviceBack={selectedDevice.platform === 'android' ? onDeviceBack : undefined}
+                    onAppSwitch={selectedDevice.platform === 'android' ? onAppSwitch : undefined}
+                    onIncreaseVolume={onIncreaseVolume}
+                    onDecreaseVolume={onDecreaseVolume}
+                    onTogglePower={onTogglePower}
+                    onInstallApp={onInstallApp}
+                    onOpenUrl={onOpenUrl}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 DeviceInstance.displayName = 'DeviceInstance';

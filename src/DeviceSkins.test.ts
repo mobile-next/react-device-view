@@ -16,10 +16,6 @@ function hasFrame(model: string): boolean {
   return getDeviceSkinForDevice(androidDevice(model)) !== NoDeviceSkin;
 }
 
-function iosHasFrame(model: string): boolean {
-  return getDeviceSkinForDevice(iosDevice(model)) !== NoDeviceSkin;
-}
-
 describe('getDeviceSkinForDevice', () => {
   it('gives the Pixel 9 a frame regardless of variant naming', () => {
     expect(hasFrame('Pixel 9')).toBe(true);
@@ -40,9 +36,14 @@ describe('getDeviceSkinForDevice', () => {
   });
 
   it('gives an Android device with no model reported the stretchable frame', () => {
-    expect(getDeviceSkinForDevice({
-      id: 'x', name: 'TestDeviceName', platform: DevicePlatform.ANDROID, type: DeviceType.REAL,
-    }).ninePatch).toBeDefined();
+    expect(
+      getDeviceSkinForDevice({
+        id: 'x',
+        name: 'TestDeviceName',
+        platform: DevicePlatform.ANDROID,
+        type: DeviceType.REAL,
+      }).ninePatch,
+    ).toBeDefined();
   });
 
   it('gives every iOS device the stretchable 9-patch frame', () => {
@@ -52,7 +53,8 @@ describe('getDeviceSkinForDevice', () => {
   });
 
   it('gives an Android device with an iPhone-looking model the Android frame, not the iOS one', () => {
-    expect(getDeviceSkinForDevice(androidDevice('iPhone 16 Pro')).ninePatch?.image)
-      .not.toBe(getDeviceSkinForDevice(iosDevice('iPhone 16 Pro')).ninePatch?.image);
+    expect(getDeviceSkinForDevice(androidDevice('iPhone 16 Pro')).ninePatch?.image).not.toBe(
+      getDeviceSkinForDevice(iosDevice('iPhone 16 Pro')).ninePatch?.image,
+    );
   });
 });

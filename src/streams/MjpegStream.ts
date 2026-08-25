@@ -1,136 +1,135 @@
 export interface MjpegFrameCallback {
-	(mimeType: string, body: Uint8Array): void;
+  (mimeType: string, body: Uint8Array): void;
 }
 
 export interface MjpegErrorCallback {
-	(error: Error): void;
+  (error: Error): void;
 }
 
 export interface MjpegStreamOptions {
-	onFrame: MjpegFrameCallback;
-	onError?: MjpegErrorCallback;
+  onFrame: MjpegFrameCallback;
+  onError?: MjpegErrorCallback;
 }
 
 export class MjpegStream {
-	private isActive: boolean = false;
+  private isActive: boolean = false;
 
-	constructor(
-		private reader: ReadableStreamDefaultReader<Uint8Array>,
-		private options: MjpegStreamOptions
-	) { }
+  constructor(
+    private reader: ReadableStreamDefaultReader<Uint8Array>,
+    private options: MjpegStreamOptions,
+  ) {}
 
-	public start(): void {
-		this.isActive = true;
-		this.processMjpegStream().catch((error) => {
-			console.error('device-view: unhandled MJPEG stream error:', error);
-			this.options.onError?.(error instanceof Error ? error : new Error(String(error)));
-		});
-	}
+  public start(): void {
+    this.isActive = true;
+    this.processMjpegStream().catch((error) => {
+      console.error('device-view: unhandled MJPEG stream error:', error);
+      this.options.onError?.(error instanceof Error ? error : new Error(String(error)));
+    });
+  }
 
-	public stop(): void {
-		console.log("device-view: stopping mjpeg stream through stop()");
-		this.isActive = false;
-		// cancel the reader to immediately abort any pending read operation
-		this.reader.cancel().catch(() => {});
-	}
+  public stop(): void {
+    console.log('device-view: stopping mjpeg stream through stop()');
+    this.isActive = false;
+    // cancel the reader to immediately abort any pending read operation
+    this.reader.cancel().catch(() => {});
+  }
 
-	private async processMjpegStream(): Promise<void> {
-		const boundary = '--BoundaryString';
-		let buffer = new Uint8Array();
-		let inImage = false;
-		let imageData = new Uint8Array();
-		let contentLength = 0;
-		let contentType = '';
-		let bytesRead = 0;
+  private async processMjpegStream(): Promise<void> {
+    const boundary = '--BoundaryString';
+    let buffer = new Uint8Array();
+    let inImage = false;
+    let imageData = new Uint8Array();
+    let contentLength = 0;
+    let contentType = '';
+    let bytesRead = 0;
 
-		console.log("device-view: starting mjpeg stream");
-		try {
-			while (this.isActive) {
-				const { done, value } = await this.reader.read();
+    console.log('device-view: starting mjpeg stream');
+    try {
+      while (this.isActive) {
+        const { done, value } = await this.reader.read();
 
-				if (done) {
-					console.log('device-view: mjpeg stream ended by server');
-					break;
-				}
+        if (done) {
+          console.log('device-view: mjpeg stream ended by server');
+          break;
+        }
 
-				// TODO: we can do this without reallocation of memory. use copyWithin().
-				const newBuffer = new Uint8Array(buffer.length + value.length);
-				newBuffer.set(buffer);
-				newBuffer.set(value, buffer.length);
-				buffer = newBuffer;
+        // TODO: we can do this without reallocation of memory. use copyWithin().
+        const newBuffer = new Uint8Array(buffer.length + value.length);
+        newBuffer.set(buffer);
+        newBuffer.set(value, buffer.length);
+        buffer = newBuffer;
 
-				let processedData = false;
-				while (true) {
-					if (!inImage) {
-						const bufferString = new TextDecoder().decode(buffer);
-						const boundaryIndex = bufferString.indexOf(boundary);
-						if (boundaryIndex < 0) {
-							break;
-						}
+        let processedData = false;
+        while (true) {
+          if (!inImage) {
+            const bufferString = new TextDecoder().decode(buffer);
+            const boundaryIndex = bufferString.indexOf(boundary);
+            if (boundaryIndex < 0) {
+              break;
+            }
 
-						const headerEndIndex = bufferString.indexOf('\r\n\r\n', boundaryIndex);
-						if (headerEndIndex < 0) {
-							break;
-						}
+            const headerEndIndex = bufferString.indexOf('\r\n\r\n', boundaryIndex);
+            if (headerEndIndex < 0) {
+              break;
+            }
 
-						const headers = bufferString.substring(boundaryIndex + boundary.length, headerEndIndex);
-						const contentLengthMatch = headers.match(/Content-Length:\s*(\d+)/i);
-						if (contentLengthMatch) {
-							contentLength = parseInt(contentLengthMatch[1]);
-						}
+            const headers = bufferString.substring(boundaryIndex + boundary.length, headerEndIndex);
+            const contentLengthMatch = headers.match(/Content-Length:\s*(\d+)/i);
+            if (contentLengthMatch) {
+              contentLength = parseInt(contentLengthMatch[1]);
+            }
 
-						const contentTypeMatch = headers.match(/Content-Type:\s*([^\r\n]+)/i);
-						contentType = contentTypeMatch ? contentTypeMatch[1].trim() : '';
+            const contentTypeMatch = headers.match(/Content-Type:\s*([^\r\n]+)/i);
+            contentType = contentTypeMatch ? contentTypeMatch[1].trim() : '';
 
-						const headerEndBytes = headerEndIndex + 4;
-						buffer = buffer.slice(headerEndBytes);
-						inImage = true;
-						imageData = new Uint8Array();
-						bytesRead = 0;
-						processedData = true;
-					}
+            const headerEndBytes = headerEndIndex + 4;
+            buffer = buffer.slice(headerEndBytes);
+            inImage = true;
+            imageData = new Uint8Array();
+            bytesRead = 0;
+            processedData = true;
+          }
 
-					if (inImage) {
-						const remainingBytes = contentLength - bytesRead;
-						const bytesToRead = Math.min(remainingBytes, buffer.length);
+          if (inImage) {
+            const remainingBytes = contentLength - bytesRead;
+            const bytesToRead = Math.min(remainingBytes, buffer.length);
 
-						if (bytesToRead === 0) {
-							break;
-						}
+            if (bytesToRead === 0) {
+              break;
+            }
 
-						const newImageData = new Uint8Array(imageData.length + bytesToRead);
-						newImageData.set(imageData);
-						newImageData.set(buffer.slice(0, bytesToRead), imageData.length);
-						imageData = newImageData;
+            const newImageData = new Uint8Array(imageData.length + bytesToRead);
+            newImageData.set(imageData);
+            newImageData.set(buffer.slice(0, bytesToRead), imageData.length);
+            imageData = newImageData;
 
-						bytesRead += bytesToRead;
-						buffer = buffer.slice(bytesToRead);
-						processedData = true;
+            bytesRead += bytesToRead;
+            buffer = buffer.slice(bytesToRead);
+            processedData = true;
 
-						if (bytesRead >= contentLength) {
-							// console.log('device-view: frame complete, content-type:', contentType, 'bytes:', contentLength);
-							this.options.onFrame(contentType, imageData);
+            if (bytesRead >= contentLength) {
+              // console.log('device-view: frame complete, content-type:', contentType, 'bytes:', contentLength);
+              this.options.onFrame(contentType, imageData);
 
-							inImage = false;
-							imageData = new Uint8Array();
-							bytesRead = 0;
-						}
-					}
-				}
+              inImage = false;
+              imageData = new Uint8Array();
+              bytesRead = 0;
+            }
+          }
+        }
 
-				if (processedData) {
-					await new Promise(resolve => setTimeout(resolve, 0));
-				}
-			}
-		} catch (error) {
-			const err = error instanceof Error ? error : new Error(String(error));
-			if (err.name === 'AbortError') {
-				console.log('device-view: mjpeg stream processing aborted with AbortError');
-			} else {
-				console.error('device-view: mjpeg processing failed with error:', err);
-				this.options.onError?.(err);
-			}
-		}
-	}
-
+        if (processedData) {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      }
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      if (err.name === 'AbortError') {
+        console.log('device-view: mjpeg stream processing aborted with AbortError');
+      } else {
+        console.error('device-view: mjpeg processing failed with error:', err);
+        this.options.onError?.(err);
+      }
+    }
+  }
 }

@@ -61,26 +61,54 @@ function App() {
   return (
     <>
       <div id="controls">
-        <label>width <input type="range" min={100} max={900} value={width} onChange={(e) => setWidth(+e.target.value)} /> {width}</label>
-        <label>height <input type="range" min={100} max={900} value={height} onChange={(e) => setHeight(+e.target.value)} /> {height}</label>
-        <label>platform
+        <label>
+          width <input type="range" min={100} max={900} value={width} onChange={(e) => setWidth(+e.target.value)} /> {width}
+        </label>
+        <label>
+          height <input type="range" min={100} max={900} value={height} onChange={(e) => setHeight(+e.target.value)} /> {height}
+        </label>
+        <label>
+          platform
           <select value={platform} onChange={(e) => setPlatform(e.target.value as keyof typeof SKINS)}>
             <option value="ios">iOS</option>
             <option value="android">Android</option>
           </select>
         </label>
-        <label>preset
-          <select onChange={(e) => { const [, w, h] = presets[+e.target.value]; setHeight(650); setWidth(Math.round(650 * w / h)); }}>
-            {presets.map(([name], i) => <option key={name} value={i}>{name}</option>)}
+        <label>
+          preset
+          <select
+            onChange={(e) => {
+              const [, w, h] = presets[+e.target.value];
+              setHeight(650);
+              setWidth(Math.round((650 * w) / h));
+            }}
+          >
+            {presets.map(([name], i) => (
+              <option key={name} value={i}>
+                {name}
+              </option>
+            ))}
           </select>
         </label>
-        <label>booting <input type="checkbox" checked={isBooting} onChange={(e) => setIsBooting(e.target.checked)} /></label>
+        <label>
+          booting <input type="checkbox" checked={isBooting} onChange={(e) => setIsBooting(e.target.checked)} />
+        </label>
         <span>aspect {(width / height).toFixed(3)}</span>
       </div>
       <div id="stage">
         <div style={{ width: frame.width * scale, height: frame.height * scale }}>
           <NinePatchSkinView skin={skin} screenSize={screenSize} isBooting={isBooting}>
-            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#4facfe,#00f2fe)', display: 'grid', placeItems: 'center', color: '#fff', fontSize: 24 }}>
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg,#4facfe,#00f2fe)',
+                display: 'grid',
+                placeItems: 'center',
+                color: '#fff',
+                fontSize: 24,
+              }}
+            >
               {width}×{height}
             </div>
           </NinePatchSkinView>

@@ -34,11 +34,7 @@ export const BootingDeviceView: React.FC<BootingDeviceViewProps> = ({ platform, 
     }}
   >
     <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
-      <NinePatchSkinView
-        skin={platform === 'android' ? androidNinePatchSkin : iosNinePatchSkin}
-        screenSize={PLACEHOLDER_SCREEN_SIZE}
-        isBooting
-      >
+      <NinePatchSkinView skin={platform === 'android' ? androidNinePatchSkin : iosNinePatchSkin} screenSize={PLACEHOLDER_SCREEN_SIZE} isBooting>
         <div style={{ width: '100%', height: '100%', background: '#000' }} />
       </NinePatchSkinView>
 

@@ -8,16 +8,16 @@ interface UseDeviceInteractionOptions {
 }
 
 export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDeviceInteractionOptions) {
-  const pendingKeys = useRef("");
+  const pendingKeys = useRef('');
   const isFlushingKeys = useRef(false);
 
   const handleTap = async (x: number, y: number) => {
     await deviceClient.tap(x, y);
   };
 
-  const pointerDown = () => ({ type: "pointerDown", button: 0 });
-  const pointerMove = (x: number, y: number, duration: number) => ({ type: "pointerMove", duration, x, y });
-  const pointerUp = () => ({ type: "pointerUp", button: 0 });
+  const pointerDown = () => ({ type: 'pointerDown', button: 0 });
+  const pointerMove = (x: number, y: number, duration: number) => ({ type: 'pointerMove', duration, x, y });
+  const pointerUp = () => ({ type: 'pointerUp', button: 0 });
 
   const handleGesture = async (points: Array<GesturePoint>) => {
     const actions: Array<{ type: string; duration?: number; x?: number; y?: number; button?: number }> = [];
@@ -41,12 +41,12 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
 
     isFlushingKeys.current = true;
     const keys = pendingKeys.current;
-    if (keys === "") {
+    if (keys === '') {
       isFlushingKeys.current = false;
       return;
     }
 
-    pendingKeys.current = "";
+    pendingKeys.current = '';
     try {
       await deviceClient.inputText(keys, 3000);
     } catch (error) {
@@ -58,9 +58,9 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
 
   const handleKeyDown = async (key: string) => {
     const keyMap: Record<string, string> = {
-      'Enter': '\n',
-      'Backspace': '\b',
-      'Delete': '\x7F',
+      Enter: '\n',
+      Backspace: '\b',
+      Delete: '\x7F',
       ' ': ' ',
     };
 
@@ -85,13 +85,27 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
     await deviceClient.pressButton(button);
   };
 
-  const onHome = () => { pressButton('HOME').catch(logButtonError); };
-  const onBack = () => { pressButton('BACK').catch(logButtonError); };
-  const onAppSwitch = () => { pressButton('APP_SWITCH').catch(logButtonError); };
-  const onPower = () => { pressButton('POWER').catch(logButtonError); };
-  const onRotateDevice = () => { console.log('device-view: rotate device requested'); };
-  const onIncreaseVolume = () => { pressButton('VOLUME_UP').catch(logButtonError); };
-  const onDecreaseVolume = () => { pressButton('VOLUME_DOWN').catch(logButtonError); };
+  const onHome = () => {
+    pressButton('HOME').catch(logButtonError);
+  };
+  const onBack = () => {
+    pressButton('BACK').catch(logButtonError);
+  };
+  const onAppSwitch = () => {
+    pressButton('APP_SWITCH').catch(logButtonError);
+  };
+  const onPower = () => {
+    pressButton('POWER').catch(logButtonError);
+  };
+  const onRotateDevice = () => {
+    console.log('device-view: rotate device requested');
+  };
+  const onIncreaseVolume = () => {
+    pressButton('VOLUME_UP').catch(logButtonError);
+  };
+  const onDecreaseVolume = () => {
+    pressButton('VOLUME_DOWN').catch(logButtonError);
+  };
 
   const getScreenshotFilename = (device: DeviceDescriptor) => {
     return `screenshot-${device.name}-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
@@ -100,12 +114,12 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
   const onTakeScreenshot = async () => {
     try {
       const response = await deviceClient.takeScreenshot();
-      const DATA_IMAGE_PNG = "data:image/png;base64,";
+      const DATA_IMAGE_PNG = 'data:image/png;base64,';
 
       if (response.data && response.data.startsWith(DATA_IMAGE_PNG)) {
         const base64Data = response.data.substring(DATA_IMAGE_PNG.length);
         const byteCharacters = atob(base64Data);
-        const byteNumbers = Array.from(byteCharacters, char => char.charCodeAt(0));
+        const byteNumbers = Array.from(byteCharacters, (char) => char.charCodeAt(0));
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: 'image/png' });
         const url = URL.createObjectURL(blob);
@@ -134,6 +148,6 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
     onRotateDevice,
     onIncreaseVolume,
     onDecreaseVolume,
-    onTakeScreenshot
+    onTakeScreenshot,
   };
 }

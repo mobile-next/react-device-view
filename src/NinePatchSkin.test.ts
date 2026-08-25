@@ -12,7 +12,7 @@ describe('nativeFrameSize', () => {
   it('keeps the reference width and shortens for a squatter screen (iPad)', () => {
     const slot = nativeScreenSlot(skin, { width: 1640, height: 2360, scale: 2 });
     expect(slot.width).toBe(592);
-    expect(slot.height).toBeCloseTo(592 * 2360 / 1640);
+    expect(slot.height).toBeCloseTo((592 * 2360) / 1640);
   });
 
   it('keeps the reference height and narrows for a taller screen', () => {

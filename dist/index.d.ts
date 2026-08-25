@@ -16,7 +16,7 @@ interface DeviceDescriptor {
     platform: DevicePlatform;
     type: DeviceType;
     version?: string;
-    state?: "online" | "offline";
+    state?: 'online' | 'offline';
 }
 interface ScreenSize {
     width: number;
@@ -266,7 +266,7 @@ declare class DeviceClient implements DeviceClientApi {
 declare function createNoOpDeviceClient(): DeviceClientApi;
 
 interface NinePatchSkin {
-    platform: 'ios' | 'android';
+    platform?: 'ios' | 'android';
     image: string;
     imageWidth: number;
     imageHeight: number;

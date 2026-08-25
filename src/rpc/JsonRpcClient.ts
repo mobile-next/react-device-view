@@ -35,7 +35,7 @@ enum ConnectionState {
   CONNECTING = 'connecting',
   CONNECTED = 'connected',
   RECONNECTING = 'reconnecting',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 interface PendingRequest {
@@ -66,7 +66,6 @@ export function formatJsonRpcError(error: { message?: string; data?: unknown }):
 const CONNECTION_TIMEOUT_MS = 10000;
 
 export class JsonRpcClient {
-
   private idCounter = 1;
   private ws: WebSocket | null = null;
   private wsState: ConnectionState = ConnectionState.DISCONNECTED;
@@ -79,15 +78,19 @@ export class JsonRpcClient {
   private logger: Logger;
   private sessionToken?: string;
 
-  constructor(public readonly url: string, logger?: Logger, private authToken?: string) {
+  constructor(
+    public readonly url: string,
+    logger?: Logger,
+    private authToken?: string,
+  ) {
     this.logger = logger || noopLogger;
     if (!this.authToken) {
-      this.authToken = "UNSET";
+      this.authToken = 'UNSET';
     }
   }
 
   private async exchangeTokenForSession(): Promise<void> {
-    if (!this.authToken || this.authToken === "UNSET") {
+    if (!this.authToken || this.authToken === 'UNSET') {
       this.logger.warn('no auth token available for exchange');
       return;
     }
@@ -100,7 +103,7 @@ export class JsonRpcClient {
     }
 
     const url = new URL(this.url);
-    const protocol = (url.protocol === 'wss:' || url.protocol === 'https:') ? 'https:' : 'http:';
+    const protocol = url.protocol === 'wss:' || url.protocol === 'https:' ? 'https:' : 'http:';
     const authUrl = `${protocol}//${url.host}/auth/token`;
 
     this.logger.info(`exchanging token at ${authUrl}`);
@@ -108,23 +111,23 @@ export class JsonRpcClient {
     const response = await fetch(authUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.authToken}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${this.authToken}`,
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
       throw new Error(`token exchange failed with status ${response.status}`);
     }
 
-    const data = await response.json() as TokenExchangeResponse;
+    const data = (await response.json()) as TokenExchangeResponse;
     this.sessionToken = data.token;
     this.logger.info(`token exchange successful, expires at: ${data.expiresAt}`);
   }
 
   private getWebSocketUrl(): string {
     const url = new URL(this.url);
-    const protocol = (url.protocol === 'https:' || url.protocol === "wss:") ? 'wss:' : 'ws:';
+    const protocol = url.protocol === 'https:' || url.protocol === 'wss:' ? 'wss:' : 'ws:';
     let wsUrl = `${protocol}//${url.host}/ws`;
 
     if (this.sessionToken) {
@@ -205,7 +208,7 @@ export class JsonRpcClient {
   }
 
   private removeConnectionListener(listener: (state: ConnectionState) => void): void {
-    this.connectionListeners = this.connectionListeners.filter(l => l !== listener);
+    this.connectionListeners = this.connectionListeners.filter((l) => l !== listener);
   }
 
   private notifyConnectionListeners(): void {
@@ -293,7 +296,7 @@ export class JsonRpcClient {
 
     this.logger.info(`attempting websocket reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
 
-    await new Promise(resolve => setTimeout(resolve, this.reconnectDelay * this.reconnectAttempts));
+    await new Promise((resolve) => setTimeout(resolve, this.reconnectDelay * this.reconnectAttempts));
 
     try {
       await this.connectWebSocket();
@@ -308,7 +311,7 @@ export class JsonRpcClient {
 
   private failAllPendingRequests(): void {
     const error = new Error('WebSocket connection failed, please retry');
-    this.pendingRequests.forEach(pending => {
+    this.pendingRequests.forEach((pending) => {
       if (pending.timeoutId) {
         clearTimeout(pending.timeoutId);
       }
@@ -321,12 +324,14 @@ export class JsonRpcClient {
     while (this.messageQueue.length > 0 && this.wsState === ConnectionState.CONNECTED) {
       const msg = this.messageQueue.shift();
       if (msg && this.ws) {
-        this.ws.send(JSON.stringify({
-          jsonrpc: JSON_RPC_VERSION,
-          id: msg.id,
-          method: msg.method,
-          params: msg.params
-        }));
+        this.ws.send(
+          JSON.stringify({
+            jsonrpc: JSON_RPC_VERSION,
+            id: msg.id,
+            method: msg.method,
+            params: msg.params,
+          }),
+        );
       }
     }
   }
@@ -350,14 +355,14 @@ export class JsonRpcClient {
         resolve,
         reject,
         timeoutId,
-        method
+        method,
       });
 
       const message = {
         jsonrpc: JSON_RPC_VERSION,
         id,
         method,
-        params
+        params,
       };
 
       if (this.ws && this.wsState === ConnectionState.CONNECTED) {

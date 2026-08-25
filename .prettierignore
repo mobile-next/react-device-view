@@ -1,0 +1,7 @@
+dist/
+example/dist/
+package-lock.json
+src/skins/iosNinePatch.ts
+src/skins/androidNinePatch.ts
+src/skins/pixel9.ts
+src/skins/bootAssets.ts

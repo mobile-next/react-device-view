@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RotateIcon, CameraIcon, HomeIcon, BackIcon, AppSwitchIcon, VolumeUpIcon, VolumeDownIcon, PowerIcon, InstallIcon, LinkIcon } from './Icons';
+import { CameraIcon, HomeIcon, BackIcon, AppSwitchIcon, VolumeUpIcon, VolumeDownIcon, PowerIcon, InstallIcon, LinkIcon } from './Icons';
 
 interface DeviceControlsProps {
   disabled?: boolean; // greyed-out, non-interactive — used while the device is booting
@@ -20,28 +20,33 @@ interface ControlButtonProps {
   icon: React.ReactNode;
   text: string;
   isActive?: boolean;
+  disabled?: boolean;
 }
 
-const ControlButton: React.FC<ControlButtonProps> = ({ onClick, icon, text, isActive = false }) => {
+const ControlButton: React.FC<ControlButtonProps> = ({ onClick, icon, text, isActive = false, disabled = false }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
 
   return (
     <div style={{ position: 'relative', height: '56px' }}>
       <button
+        // Native disabled (not just pointer-events) so the buttons can't be
+        // focused or activated from the keyboard while greyed out.
+        disabled={disabled}
         onClick={onClick}
         onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => { setIsHovered(false); setIsPressed(false); }}
+        onMouseLeave={() => {
+          setIsHovered(false);
+          setIsPressed(false);
+        }}
         onMouseDown={() => setIsPressed(true)}
         onMouseUp={() => setIsPressed(false)}
         title={text}
         style={{
           width: isHovered ? '150px' : '56px',
           height: '56px',
-          background: isActive
-            ? 'linear-gradient(135deg, #00ff88 0%, #00cc6f 100%)'
-            : (isHovered ? '#2a2a2a' : '#1a1a1a'),
-          border: (isActive || isHovered) ? '1px solid #00ff88' : '1px solid #2a2a2a',
+          background: isActive ? 'linear-gradient(135deg, #00ff88 0%, #00cc6f 100%)' : isHovered ? '#2a2a2a' : '#1a1a1a',
+          border: isActive || isHovered ? '1px solid #00ff88' : '1px solid #2a2a2a',
           borderRadius: '12px',
           display: 'flex',
           alignItems: 'center',
@@ -58,23 +63,27 @@ const ControlButton: React.FC<ControlButtonProps> = ({ onClick, icon, text, isAc
           transform: isPressed ? 'translateX(0px) scale(0.98)' : 'translateX(0px)',
         }}
       >
-        <div style={{
-          width: '24px',
-          height: '24px',
-          color: isActive ? '#0a0a0a' : (isHovered ? '#00ff88' : '#888'),
-          transition: isHovered ? 'color 0.3s 0s' : 'color 0.3s 0.3s',
-          flexShrink: 0
-        }}>
+        <div
+          style={{
+            width: '24px',
+            height: '24px',
+            color: isActive ? '#0a0a0a' : isHovered ? '#00ff88' : '#888',
+            transition: isHovered ? 'color 0.3s 0s' : 'color 0.3s 0.3s',
+            flexShrink: 0,
+          }}
+        >
           {icon}
         </div>
-        <span style={{
-          marginLeft: '12px',
-          fontSize: '12px',
-          color: isActive ? '#0a0a0a' : '#e0e0e0',
-          whiteSpace: 'nowrap',
-          opacity: isHovered ? 1 : 0,
-          transition: isHovered ? 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0s' : 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s'
-        }}>
+        <span
+          style={{
+            marginLeft: '12px',
+            fontSize: '12px',
+            color: isActive ? '#0a0a0a' : '#e0e0e0',
+            whiteSpace: 'nowrap',
+            opacity: isHovered ? 1 : 0,
+            transition: isHovered ? 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0s' : 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s',
+          }}
+        >
           {text}
         </span>
       </button>
@@ -92,7 +101,6 @@ const ControlSeparator: React.FC = () => (
 
 export const DeviceControls: React.FC<DeviceControlsProps> = ({
   disabled = false,
-  onRotateDevice,
   onTakeScreenshot,
   onDeviceHome,
   onDeviceBack,
@@ -104,27 +112,29 @@ export const DeviceControls: React.FC<DeviceControlsProps> = ({
   onOpenUrl,
 }) => {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px',
-      zIndex: 1000,
-      marginLeft: '10px',
-      position: 'relative',
-      width: '56px',
-      ...(disabled ? { opacity: 0.4, pointerEvents: 'none' as const } : {}),
-    }}>
-      <ControlButton onClick={onTakeScreenshot || noop} icon={<CameraIcon />} text="Screenshot" />
-      <ControlButton onClick={onDeviceHome || noop} icon={<HomeIcon />} text="Home" />
-      {onDeviceBack && <ControlButton onClick={onDeviceBack} icon={<BackIcon />} text="Back" />}
-      {onAppSwitch && <ControlButton onClick={onAppSwitch} icon={<AppSwitchIcon />} text="Recents" />}
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        zIndex: 1000,
+        marginLeft: '10px',
+        position: 'relative',
+        width: '56px',
+        ...(disabled ? { opacity: 0.4, pointerEvents: 'none' as const } : {}),
+      }}
+    >
+      <ControlButton disabled={disabled} onClick={onTakeScreenshot || noop} icon={<CameraIcon />} text="Screenshot" />
+      <ControlButton disabled={disabled} onClick={onDeviceHome || noop} icon={<HomeIcon />} text="Home" />
+      {onDeviceBack && <ControlButton disabled={disabled} onClick={onDeviceBack} icon={<BackIcon />} text="Back" />}
+      {onAppSwitch && <ControlButton disabled={disabled} onClick={onAppSwitch} icon={<AppSwitchIcon />} text="Recents" />}
       <ControlSeparator />
-      <ControlButton onClick={onIncreaseVolume || noop} icon={<VolumeUpIcon />} text="Volume Up" />
-      <ControlButton onClick={onDecreaseVolume || noop} icon={<VolumeDownIcon />} text="Volume Down" />
-      <ControlButton onClick={onTogglePower || noop} icon={<PowerIcon />} text="Power" />
+      <ControlButton disabled={disabled} onClick={onIncreaseVolume || noop} icon={<VolumeUpIcon />} text="Volume Up" />
+      <ControlButton disabled={disabled} onClick={onDecreaseVolume || noop} icon={<VolumeDownIcon />} text="Volume Down" />
+      <ControlButton disabled={disabled} onClick={onTogglePower || noop} icon={<PowerIcon />} text="Power" />
       {(onInstallApp || onOpenUrl) && <ControlSeparator />}
-      {onInstallApp && <ControlButton onClick={onInstallApp} icon={<InstallIcon />} text="Install App" />}
-      {onOpenUrl && <ControlButton onClick={onOpenUrl} icon={<LinkIcon />} text="Open URL" />}
+      {onInstallApp && <ControlButton disabled={disabled} onClick={onInstallApp} icon={<InstallIcon />} text="Install App" />}
+      {onOpenUrl && <ControlButton disabled={disabled} onClick={onOpenUrl} icon={<LinkIcon />} text="Open URL" />}
     </div>
   );
 };
