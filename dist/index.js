@@ -113,7 +113,7 @@ var NinePatchSkinView = ({ skin, screenSize, isBooting, children }) => {
                 overflow: "hidden",
                 zIndex: 1
               },
-              children: isBooting ? /* @__PURE__ */ jsxRuntime.jsx(BootScreen, { platform: skin.platform }) : children
+              children: isBooting ? /* @__PURE__ */ jsxRuntime.jsx(BootScreen, { platform: skin.platform ?? "ios" }) : children
             }
           ),
           /* @__PURE__ */ jsxRuntime.jsx(
@@ -255,12 +255,13 @@ var PowerIcon = () => /* @__PURE__ */ jsxRuntime.jsxs("svg", { viewBox: "0 0 24 
   /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M12 2v10" }),
   /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M18.4 6.6a9 9 0 1 1-12.77.04" })
 ] });
-var ControlButton = ({ onClick, icon, text, isActive = false }) => {
+var ControlButton = ({ onClick, icon, text, isActive = false, disabled = false }) => {
   const [isHovered, setIsHovered] = react.useState(false);
   const [isPressed, setIsPressed] = react.useState(false);
   return /* @__PURE__ */ jsxRuntime.jsx("div", { style: { position: "relative", height: "56px" }, children: /* @__PURE__ */ jsxRuntime.jsxs(
     "button",
     {
+      disabled,
       onClick,
       onMouseEnter: () => setIsHovered(true),
       onMouseLeave: () => {
@@ -336,17 +337,17 @@ var DeviceControls = ({
     width: "56px",
     ...disabled ? { opacity: 0.4, pointerEvents: "none" } : {}
   }, children: [
-    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onTakeScreenshot || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(CameraIcon, {}), text: "Screenshot" }),
-    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onDeviceHome || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(HomeIcon, {}), text: "Home" }),
-    onDeviceBack && /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onDeviceBack, icon: /* @__PURE__ */ jsxRuntime.jsx(BackIcon, {}), text: "Back" }),
-    onAppSwitch && /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onAppSwitch, icon: /* @__PURE__ */ jsxRuntime.jsx(AppSwitchIcon, {}), text: "Recents" }),
+    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { disabled, onClick: onTakeScreenshot || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(CameraIcon, {}), text: "Screenshot" }),
+    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { disabled, onClick: onDeviceHome || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(HomeIcon, {}), text: "Home" }),
+    onDeviceBack && /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { disabled, onClick: onDeviceBack, icon: /* @__PURE__ */ jsxRuntime.jsx(BackIcon, {}), text: "Back" }),
+    onAppSwitch && /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { disabled, onClick: onAppSwitch, icon: /* @__PURE__ */ jsxRuntime.jsx(AppSwitchIcon, {}), text: "Recents" }),
     /* @__PURE__ */ jsxRuntime.jsx(ControlSeparator, {}),
-    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onIncreaseVolume || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(VolumeUpIcon, {}), text: "Volume Up" }),
-    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onDecreaseVolume || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(VolumeDownIcon, {}), text: "Volume Down" }),
-    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onTogglePower || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(PowerIcon, {}), text: "Power" }),
+    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { disabled, onClick: onIncreaseVolume || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(VolumeUpIcon, {}), text: "Volume Up" }),
+    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { disabled, onClick: onDecreaseVolume || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(VolumeDownIcon, {}), text: "Volume Down" }),
+    /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { disabled, onClick: onTogglePower || noop, icon: /* @__PURE__ */ jsxRuntime.jsx(PowerIcon, {}), text: "Power" }),
     (onInstallApp || onOpenUrl) && /* @__PURE__ */ jsxRuntime.jsx(ControlSeparator, {}),
-    onInstallApp && /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onInstallApp, icon: /* @__PURE__ */ jsxRuntime.jsx(InstallIcon, {}), text: "Install App" }),
-    onOpenUrl && /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { onClick: onOpenUrl, icon: /* @__PURE__ */ jsxRuntime.jsx(LinkIcon, {}), text: "Open URL" })
+    onInstallApp && /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { disabled, onClick: onInstallApp, icon: /* @__PURE__ */ jsxRuntime.jsx(InstallIcon, {}), text: "Install App" }),
+    onOpenUrl && /* @__PURE__ */ jsxRuntime.jsx(ControlButton, { disabled, onClick: onOpenUrl, icon: /* @__PURE__ */ jsxRuntime.jsx(LinkIcon, {}), text: "Open URL" })
   ] });
 };
 var DeviceState = /* @__PURE__ */ ((DeviceState3) => {

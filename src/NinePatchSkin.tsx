@@ -8,7 +8,7 @@ import { BootScreen } from './BootScreen';
 // (which must not stretch) are cropped out of the image and drawn back as plain
 // CSS shapes. All numbers are in the image's native pixels.
 export interface NinePatchSkin {
-  platform: 'ios' | 'android'; // picks the boot animation when isBooting
+  platform?: 'ios' | 'android'; // picks the boot animation when isBooting; defaults to 'ios'
   image: string; // data URI, transparent screen hole
   imageWidth: number;
   imageHeight: number;
@@ -89,7 +89,7 @@ export const NinePatchSkinView: React.FC<NinePatchSkinProps> = ({ skin, screenSi
             zIndex: 1,
           }}
         >
-          {isBooting ? <BootScreen platform={skin.platform} /> : children}
+          {isBooting ? <BootScreen platform={skin.platform ?? 'ios'} /> : children}
         </div>
         {/* The 9-patch bezel, on top so it covers any stream overhang. */}
         <div
