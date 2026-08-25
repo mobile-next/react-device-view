@@ -111,7 +111,7 @@ var NinePatchSkinView = ({ skin, screenSize, isBooting, children }) => {
                 overflow: "hidden",
                 zIndex: 1
               },
-              children: isBooting ? /* @__PURE__ */ jsx(BootScreen, { platform: skin.platform }) : children
+              children: isBooting ? /* @__PURE__ */ jsx(BootScreen, { platform: skin.platform ?? "ios" }) : children
             }
           ),
           /* @__PURE__ */ jsx(
@@ -253,12 +253,13 @@ var PowerIcon = () => /* @__PURE__ */ jsxs("svg", { viewBox: "0 0 24 24", fill: 
   /* @__PURE__ */ jsx("path", { d: "M12 2v10" }),
   /* @__PURE__ */ jsx("path", { d: "M18.4 6.6a9 9 0 1 1-12.77.04" })
 ] });
-var ControlButton = ({ onClick, icon, text, isActive = false }) => {
+var ControlButton = ({ onClick, icon, text, isActive = false, disabled = false }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   return /* @__PURE__ */ jsx("div", { style: { position: "relative", height: "56px" }, children: /* @__PURE__ */ jsxs(
     "button",
     {
+      disabled,
       onClick,
       onMouseEnter: () => setIsHovered(true),
       onMouseLeave: () => {
@@ -334,17 +335,17 @@ var DeviceControls = ({
     width: "56px",
     ...disabled ? { opacity: 0.4, pointerEvents: "none" } : {}
   }, children: [
-    /* @__PURE__ */ jsx(ControlButton, { onClick: onTakeScreenshot || noop, icon: /* @__PURE__ */ jsx(CameraIcon, {}), text: "Screenshot" }),
-    /* @__PURE__ */ jsx(ControlButton, { onClick: onDeviceHome || noop, icon: /* @__PURE__ */ jsx(HomeIcon, {}), text: "Home" }),
-    onDeviceBack && /* @__PURE__ */ jsx(ControlButton, { onClick: onDeviceBack, icon: /* @__PURE__ */ jsx(BackIcon, {}), text: "Back" }),
-    onAppSwitch && /* @__PURE__ */ jsx(ControlButton, { onClick: onAppSwitch, icon: /* @__PURE__ */ jsx(AppSwitchIcon, {}), text: "Recents" }),
+    /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onTakeScreenshot || noop, icon: /* @__PURE__ */ jsx(CameraIcon, {}), text: "Screenshot" }),
+    /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onDeviceHome || noop, icon: /* @__PURE__ */ jsx(HomeIcon, {}), text: "Home" }),
+    onDeviceBack && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onDeviceBack, icon: /* @__PURE__ */ jsx(BackIcon, {}), text: "Back" }),
+    onAppSwitch && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onAppSwitch, icon: /* @__PURE__ */ jsx(AppSwitchIcon, {}), text: "Recents" }),
     /* @__PURE__ */ jsx(ControlSeparator, {}),
-    /* @__PURE__ */ jsx(ControlButton, { onClick: onIncreaseVolume || noop, icon: /* @__PURE__ */ jsx(VolumeUpIcon, {}), text: "Volume Up" }),
-    /* @__PURE__ */ jsx(ControlButton, { onClick: onDecreaseVolume || noop, icon: /* @__PURE__ */ jsx(VolumeDownIcon, {}), text: "Volume Down" }),
-    /* @__PURE__ */ jsx(ControlButton, { onClick: onTogglePower || noop, icon: /* @__PURE__ */ jsx(PowerIcon, {}), text: "Power" }),
+    /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onIncreaseVolume || noop, icon: /* @__PURE__ */ jsx(VolumeUpIcon, {}), text: "Volume Up" }),
+    /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onDecreaseVolume || noop, icon: /* @__PURE__ */ jsx(VolumeDownIcon, {}), text: "Volume Down" }),
+    /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onTogglePower || noop, icon: /* @__PURE__ */ jsx(PowerIcon, {}), text: "Power" }),
     (onInstallApp || onOpenUrl) && /* @__PURE__ */ jsx(ControlSeparator, {}),
-    onInstallApp && /* @__PURE__ */ jsx(ControlButton, { onClick: onInstallApp, icon: /* @__PURE__ */ jsx(InstallIcon, {}), text: "Install App" }),
-    onOpenUrl && /* @__PURE__ */ jsx(ControlButton, { onClick: onOpenUrl, icon: /* @__PURE__ */ jsx(LinkIcon, {}), text: "Open URL" })
+    onInstallApp && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onInstallApp, icon: /* @__PURE__ */ jsx(InstallIcon, {}), text: "Install App" }),
+    onOpenUrl && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onOpenUrl, icon: /* @__PURE__ */ jsx(LinkIcon, {}), text: "Open URL" })
   ] });
 };
 var DeviceState = /* @__PURE__ */ ((DeviceState3) => {
