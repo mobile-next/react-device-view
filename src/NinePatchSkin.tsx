@@ -68,7 +68,16 @@ export const NinePatchSkinView: React.FC<NinePatchSkinProps> = ({ skin, screenSi
   return (
     // Height-driven like the exact-frame path: fills the parent's height and
     // derives its own width from the frame aspect, so content-width parents work.
-    <div style={{ height: '100%', aspectRatio: `${frame.width} / ${frame.height}`, maxWidth: '100%', containerType: 'size', display: 'grid', placeItems: 'center' }}>
+    <div
+      style={{
+        height: '100%',
+        aspectRatio: `${frame.width} / ${frame.height}`,
+        maxWidth: '100%',
+        containerType: 'size',
+        display: 'grid',
+        placeItems: 'center',
+      }}
+    >
       <div
         style={{
           ['--s' as string]: `calc(${frameWidth} / ${frame.width})`,

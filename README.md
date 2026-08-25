@@ -22,7 +22,7 @@ import { DeviceView } from '@mobile-next/device-view';
   onConnected={() => console.log('connected')}
   onDisconnected={() => console.log('disconnected')}
   onError={(err) => console.error(err)}
-/>
+/>;
 ```
 
 The component fills its container, so give the parent element a size.

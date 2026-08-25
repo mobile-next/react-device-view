@@ -3,10 +3,10 @@ import { ScreenSize, GesturePoint, StreamRenderMode } from './types';
 import { BootScreen } from './BootScreen';
 
 export enum DeviceState {
-  UNKNOWN = "UNKNOWN",
-  BOOTING = "BOOTING",
-  CONNECTING = "CONNECTING",
-  CONNECTED = "CONNECTED",
+  UNKNOWN = 'UNKNOWN',
+  BOOTING = 'BOOTING',
+  CONNECTING = 'CONNECTING',
+  CONNECTED = 'CONNECTED',
 }
 
 interface ClickAnimation {
@@ -24,13 +24,29 @@ interface GestureState {
 }
 
 const ViewportSpinner: React.FC<{ message: string }> = ({ message }) => (
-  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: '#888' }}>
+  <div
+    style={{
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center',
+      color: '#888',
+    }}
+  >
     <div>
-      <div style={{
-        width: '24px', height: '24px', margin: '0 auto 12px',
-        border: '2px solid #333', borderTopColor: '#888', borderRadius: '50%',
-        animation: 'device-view-spin 0.6s linear infinite'
-      }} />
+      <div
+        style={{
+          width: '24px',
+          height: '24px',
+          margin: '0 auto 12px',
+          border: '2px solid #333',
+          borderTopColor: '#888',
+          borderRadius: '50%',
+          animation: 'device-view-spin 0.6s linear infinite',
+        }}
+      />
       <style>{`@keyframes device-view-spin { to { transform: rotate(360deg); } }`}</style>
       <p style={{ margin: 0, fontSize: '14px' }}>{message}</p>
     </div>
@@ -42,7 +58,7 @@ const emptyGestureState: GestureState = {
   startTime: 0,
   lastTimestamp: 0,
   points: [],
-  path: []
+  path: [],
 };
 
 export const DeviceViewport: React.FC<{
@@ -56,18 +72,7 @@ export const DeviceViewport: React.FC<{
   state: DeviceState;
   isBooting?: boolean; // fake boot screen until the first stream frame lands
   platform?: 'ios' | 'android';
-}> = ({
-  screenSize,
-  onTap,
-  onGesture,
-  connectProgressMessage,
-  streamMode,
-  videoRef,
-  canvasRef,
-  state,
-  isBooting,
-  platform,
-}) => {
+}> = ({ screenSize, onTap, onGesture, connectProgressMessage, streamMode, videoRef, canvasRef, state, isBooting, platform }) => {
   const [clicks, setClicks] = useState<ClickAnimation[]>([]);
   const [gestureState, setGestureState] = useState<GestureState>(emptyGestureState);
   const gestureRef = useRef<GestureState>(emptyGestureState);
@@ -94,7 +99,7 @@ export const DeviceViewport: React.FC<{
       startTime: now,
       lastTimestamp: now,
       points: [{ x: coords.screenX, y: coords.screenY, duration: 0 }],
-      path: [[coords.x, coords.y]]
+      path: [[coords.x, coords.y]],
     });
   };
 
@@ -104,7 +109,7 @@ export const DeviceViewport: React.FC<{
     const coords = convertToScreenCoords(e.clientX, e.clientY, e.currentTarget);
     const now = Date.now();
 
-    if (g.isGesturing || (now - g.startTime) > 100) {
+    if (g.isGesturing || now - g.startTime > 100) {
       const duration = now - g.lastTimestamp;
       const newPoint: GesturePoint = { x: coords.screenX, y: coords.screenY, duration };
       updateGesture({
@@ -129,8 +134,10 @@ export const DeviceViewport: React.FC<{
       onGesture(finalPoints);
     } else {
       const newClick: ClickAnimation = { id: Date.now(), x: coords.x, y: coords.y };
-      setClicks(prev => [...prev, newClick]);
-      setTimeout(() => { setClicks(prev => prev.filter(c => c.id !== newClick.id)); }, 400);
+      setClicks((prev) => [...prev, newClick]);
+      setTimeout(() => {
+        setClicks((prev) => prev.filter((c) => c.id !== newClick.id));
+      }, 400);
       onTap(coords.screenX, coords.screenY);
     }
 
@@ -156,7 +163,7 @@ export const DeviceViewport: React.FC<{
     // isn't made (and locked in) before we get a chance to influence it.
     willChange: 'transform',
     transform: 'translateZ(0)',
-    backfaceVisibility: 'hidden'
+    backfaceVisibility: 'hidden',
   };
 
   return (
@@ -200,27 +207,39 @@ export const DeviceViewport: React.FC<{
             />
           )}
 
-          {clicks.map(click => (
+          {clicks.map((click) => (
             <div
               key={click.id}
               style={{
                 position: 'absolute',
                 left: `${click.x}px`,
                 top: `${click.y}px`,
-                width: '20px', height: '20px',
-                marginLeft: '-10px', marginTop: '-10px',
+                width: '20px',
+                height: '20px',
+                marginLeft: '-10px',
+                marginTop: '-10px',
                 borderRadius: '50%',
                 border: '2px solid rgba(0, 255, 136, 0.8)',
                 pointerEvents: 'none',
                 animation: 'device-view-click 0.4s ease-out forwards',
-                zIndex: 10
+                zIndex: 10,
               }}
             />
           ))}
           <style>{`@keyframes device-view-click { from { transform: scale(1); opacity: 1; } to { transform: scale(2); opacity: 0; } }`}</style>
 
           {gestureState.isGesturing && gestureState.path.length > 1 && (
-            <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }}>
+            <svg
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                zIndex: 10,
+              }}
+            >
               <polyline
                 points={gestureState.path.map(([x, y]) => `${x},${y}`).join(' ')}
                 fill="none"

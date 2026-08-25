@@ -12,9 +12,7 @@ describe('isSessionClosedError', () => {
   });
 
   it('is NOT terminal for the transient "publisher not connected yet" case', () => {
-    expect(
-      isSessionClosedError('JSON-RPC error: Server error - client not connected yet, no track available'),
-    ).toBe(false);
+    expect(isSessionClosedError('JSON-RPC error: Server error - client not connected yet, no track available')).toBe(false);
   });
 
   it('is NOT terminal for arbitrary/unknown errors', () => {

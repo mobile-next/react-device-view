@@ -16,7 +16,7 @@ interface DeviceDescriptor {
     platform: DevicePlatform;
     type: DeviceType;
     version?: string;
-    state?: "online" | "offline";
+    state?: 'online' | 'offline';
 }
 interface ScreenSize {
     width: number;

@@ -1,11 +1,5 @@
 import { JsonRpcClient } from './JsonRpcClient';
-import {
-  DeviceInfoResponse,
-  ScreenshotResponse,
-  ScreencaptureResponse,
-  ButtonType,
-  ScreenCaptureFormat,
-} from '../types';
+import { DeviceInfoResponse, ScreenshotResponse, ScreencaptureResponse, ButtonType, ScreenCaptureFormat } from '../types';
 
 export interface DeviceClientApi {
   getDeviceInfo(): Promise<DeviceInfoResponse>;
@@ -23,14 +17,10 @@ export interface DeviceClientApi {
 export class DeviceClient implements DeviceClientApi {
   constructor(
     private readonly jsonRpcClient: JsonRpcClient,
-    private readonly deviceId: string
+    private readonly deviceId: string,
   ) {}
 
-  private request<T = void>(
-    method: string,
-    params?: Record<string, any>,
-    timeoutMs?: number
-  ): Promise<T> {
+  private request<T = void>(method: string, params?: Record<string, any>, timeoutMs?: number): Promise<T> {
     const combinedParams = { deviceId: this.deviceId, ...(params || {}) };
     return this.jsonRpcClient.sendJsonRpcRequest<T>(method, combinedParams, timeoutMs);
   }
@@ -78,7 +68,15 @@ export class DeviceClient implements DeviceClientApi {
 
 class NoOpDeviceClient implements DeviceClientApi {
   async getDeviceInfo(): Promise<DeviceInfoResponse> {
-    return { device: { id: '', name: '', platform: '', type: '', screenSize: { width: 0, height: 0, scale: 1.0 } } };
+    return {
+      device: {
+        id: '',
+        name: '',
+        platform: '',
+        type: '',
+        screenSize: { width: 0, height: 0, scale: 1.0 },
+      },
+    };
   }
   async boot(): Promise<void> {}
   async reboot(): Promise<void> {}
@@ -87,8 +85,12 @@ class NoOpDeviceClient implements DeviceClientApi {
   async gesture(_actions: Array<{ type: string; duration?: number; x?: number; y?: number; button?: number }>): Promise<void> {}
   async inputText(_text: string, _timeoutMs?: number): Promise<void> {}
   async pressButton(_button: ButtonType): Promise<void> {}
-  async takeScreenshot(): Promise<ScreenshotResponse> { return { data: '' }; }
-  async screenCaptureStart(format: ScreenCaptureFormat, _scale?: number): Promise<ScreencaptureResponse> { return { format }; }
+  async takeScreenshot(): Promise<ScreenshotResponse> {
+    return { data: '' };
+  }
+  async screenCaptureStart(format: ScreenCaptureFormat, _scale?: number): Promise<ScreencaptureResponse> {
+    return { format };
+  }
 }
 
 const noOpDeviceClient = new NoOpDeviceClient();

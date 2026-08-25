@@ -28,7 +28,15 @@ export const BootScreen: React.FC<BootScreenProps> = ({ platform }) => (
     ) : (
       <>
         <img src={IOS_BOOT_LOGO} alt="" style={{ width: '22%' }} />
-        <div style={{ width: '60%', height: '4px', borderRadius: '2px', background: '#3a3a3c', overflow: 'hidden' }}>
+        <div
+          style={{
+            width: '60%',
+            height: '4px',
+            borderRadius: '2px',
+            background: '#3a3a3c',
+            overflow: 'hidden',
+          }}
+        >
           <div
             style={{
               width: '100%',

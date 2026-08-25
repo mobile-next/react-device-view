@@ -1,0 +1,8 @@
+# Fast checks on staged files, then the full gate CI runs.
+npx lint-staged
+npm run typecheck
+npm test
+# dist/ is committed and consumed straight from git — rebuild and stage it so
+# a commit can never ship src changes with a stale build (CI verifies too).
+npm run build
+git add dist

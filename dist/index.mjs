@@ -43,19 +43,31 @@ var BootScreen = ({ platform }) => /* @__PURE__ */ jsx(
     },
     children: platform === "android" ? /* @__PURE__ */ jsx("img", { src: ANDROID_BOOT_GIF, alt: "", style: { width: "70%" } }) : /* @__PURE__ */ jsxs(Fragment, { children: [
       /* @__PURE__ */ jsx("img", { src: IOS_BOOT_LOGO, alt: "", style: { width: "22%" } }),
-      /* @__PURE__ */ jsx("div", { style: { width: "60%", height: "4px", borderRadius: "2px", background: "#3a3a3c", overflow: "hidden" }, children: /* @__PURE__ */ jsx(
+      /* @__PURE__ */ jsx(
         "div",
         {
           style: {
-            width: "100%",
-            height: "100%",
-            background: "#fff",
-            transformOrigin: "left",
-            transform: "scaleX(0)",
-            animation: `device-view-boot-progress ${IOS_BOOT_DURATION_SECONDS}s linear forwards`
-          }
+            width: "60%",
+            height: "4px",
+            borderRadius: "2px",
+            background: "#3a3a3c",
+            overflow: "hidden"
+          },
+          children: /* @__PURE__ */ jsx(
+            "div",
+            {
+              style: {
+                width: "100%",
+                height: "100%",
+                background: "#fff",
+                transformOrigin: "left",
+                transform: "scaleX(0)",
+                animation: `device-view-boot-progress ${IOS_BOOT_DURATION_SECONDS}s linear forwards`
+              }
+            }
+          )
         }
-      ) }),
+      ),
       /* @__PURE__ */ jsx("style", { children: `@keyframes device-view-boot-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }` })
     ] })
   }
@@ -88,65 +100,78 @@ var NinePatchSkinView = ({ skin, screenSize, isBooting, children }) => {
   return (
     // Height-driven like the exact-frame path: fills the parent's height and
     // derives its own width from the frame aspect, so content-width parents work.
-    /* @__PURE__ */ jsx("div", { style: { height: "100%", aspectRatio: `${frame.width} / ${frame.height}`, maxWidth: "100%", containerType: "size", display: "grid", placeItems: "center" }, children: /* @__PURE__ */ jsxs(
+    /* @__PURE__ */ jsx(
       "div",
       {
         style: {
-          ["--s"]: `calc(${frameWidth} / ${frame.width})`,
-          position: "relative",
-          width: frameWidth,
-          aspectRatio: `${frame.width} / ${frame.height}`
+          height: "100%",
+          aspectRatio: `${frame.width} / ${frame.height}`,
+          maxWidth: "100%",
+          containerType: "size",
+          display: "grid",
+          placeItems: "center"
         },
-        children: [
-          /* @__PURE__ */ jsx(
-            "div",
-            {
-              style: {
-                position: "absolute",
-                top: px(bezel.top),
-                left: px(bezel.left),
-                right: px(bezel.right),
-                bottom: px(bezel.bottom),
-                borderRadius: px(skin.screenCornerRadius),
-                overflow: "hidden",
-                zIndex: 1
-              },
-              children: isBooting ? /* @__PURE__ */ jsx(BootScreen, { platform: skin.platform ?? "ios" }) : children
-            }
-          ),
-          /* @__PURE__ */ jsx(
-            "div",
-            {
-              style: {
-                position: "absolute",
-                inset: 0,
-                borderStyle: "solid",
-                borderWidth: px(slice),
-                borderImage: `url("${skin.image}") ${slice} / ${px(slice)} stretch`,
-                pointerEvents: "none",
-                zIndex: 2
-              }
-            }
-          ),
-          skin.buttons.map((b, i) => /* @__PURE__ */ jsx(
-            "div",
-            {
-              style: {
-                position: "absolute",
-                top: px(mapButtonTop(skin, frame.height, b)),
-                height: px(b.height),
-                width: px(b.depth),
-                [b.side]: px(-b.depth),
-                background: BUTTON_COLOR,
-                borderRadius: b.side === "left" ? "2px 0 0 2px" : "0 2px 2px 0",
-                pointerEvents: "none"
-              }
+        children: /* @__PURE__ */ jsxs(
+          "div",
+          {
+            style: {
+              ["--s"]: `calc(${frameWidth} / ${frame.width})`,
+              position: "relative",
+              width: frameWidth,
+              aspectRatio: `${frame.width} / ${frame.height}`
             },
-            i
-          ))
-        ]
+            children: [
+              /* @__PURE__ */ jsx(
+                "div",
+                {
+                  style: {
+                    position: "absolute",
+                    top: px(bezel.top),
+                    left: px(bezel.left),
+                    right: px(bezel.right),
+                    bottom: px(bezel.bottom),
+                    borderRadius: px(skin.screenCornerRadius),
+                    overflow: "hidden",
+                    zIndex: 1
+                  },
+                  children: isBooting ? /* @__PURE__ */ jsx(BootScreen, { platform: skin.platform ?? "ios" }) : children
+                }
+              ),
+              /* @__PURE__ */ jsx(
+                "div",
+                {
+                  style: {
+                    position: "absolute",
+                    inset: 0,
+                    borderStyle: "solid",
+                    borderWidth: px(slice),
+                    borderImage: `url("${skin.image}") ${slice} / ${px(slice)} stretch`,
+                    pointerEvents: "none",
+                    zIndex: 2
+                  }
+                }
+              ),
+              skin.buttons.map((b, i) => /* @__PURE__ */ jsx(
+                "div",
+                {
+                  style: {
+                    position: "absolute",
+                    top: px(mapButtonTop(skin, frame.height, b)),
+                    height: px(b.height),
+                    width: px(b.depth),
+                    [b.side]: px(-b.depth),
+                    background: BUTTON_COLOR,
+                    borderRadius: b.side === "left" ? "2px 0 0 2px" : "0 2px 2px 0",
+                    pointerEvents: "none"
+                  }
+                },
+                i
+              ))
+            ]
+          }
+        )
       }
-    ) })
+    )
   );
 };
 var toCssPercent = (value, total) => `${value / total * 100}%`;
@@ -162,25 +187,37 @@ var DeviceSkinComponent = ({ deviceSkin, screenSize, children }) => {
   }
   if (!deviceSkin.frameImage) {
     const hasSize = screenSize.width > 0 && screenSize.height > 0;
-    return /* @__PURE__ */ jsx("div", { style: { position: "relative", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ jsx(
+    return /* @__PURE__ */ jsx(
       "div",
       {
         style: {
+          position: "relative",
           height: "100%",
-          aspectRatio: hasSize ? `${screenSize.width} / ${screenSize.height}` : void 0,
-          maxWidth: "100%",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          borderRadius: "30px",
-          padding: "5px",
-          background: "#1b1b1b",
-          boxSizing: "border-box"
+          justifyContent: "center"
         },
-        children
+        children: /* @__PURE__ */ jsx(
+          "div",
+          {
+            style: {
+              height: "100%",
+              aspectRatio: hasSize ? `${screenSize.width} / ${screenSize.height}` : void 0,
+              maxWidth: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              borderRadius: "30px",
+              padding: "5px",
+              background: "#1b1b1b",
+              boxSizing: "border-box"
+            },
+            children
+          }
+        )
       }
-    ) });
+    );
   }
   const { display, frameWidth, frameHeight, frameImage: frameImage2 } = deviceSkin;
   const screenRadius = `${toCssPercent(display.cornerRadius, display.width)} / ${toCssPercent(display.cornerRadius, display.height)}`;
@@ -208,7 +245,14 @@ var DeviceSkinComponent = ({ deviceSkin, screenSize, children }) => {
         src: frameImage2,
         alt: "",
         draggable: false,
-        style: { ...frameImageStyle, position: "absolute", top: 0, left: 0, pointerEvents: "none", zIndex: 2 }
+        style: {
+          ...frameImageStyle,
+          position: "absolute",
+          top: 0,
+          left: 0,
+          pointerEvents: "none",
+          zIndex: 2
+        }
       }
     )
   ] });
@@ -290,21 +334,33 @@ var ControlButton = ({ onClick, icon, text, isActive = false, disabled = false }
         transform: isPressed ? "translateX(0px) scale(0.98)" : "translateX(0px)"
       },
       children: [
-        /* @__PURE__ */ jsx("div", { style: {
-          width: "24px",
-          height: "24px",
-          color: isActive ? "#0a0a0a" : isHovered ? "#00ff88" : "#888",
-          transition: isHovered ? "color 0.3s 0s" : "color 0.3s 0.3s",
-          flexShrink: 0
-        }, children: icon }),
-        /* @__PURE__ */ jsx("span", { style: {
-          marginLeft: "12px",
-          fontSize: "12px",
-          color: isActive ? "#0a0a0a" : "#e0e0e0",
-          whiteSpace: "nowrap",
-          opacity: isHovered ? 1 : 0,
-          transition: isHovered ? "opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0s" : "opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s"
-        }, children: text })
+        /* @__PURE__ */ jsx(
+          "div",
+          {
+            style: {
+              width: "24px",
+              height: "24px",
+              color: isActive ? "#0a0a0a" : isHovered ? "#00ff88" : "#888",
+              transition: isHovered ? "color 0.3s 0s" : "color 0.3s 0.3s",
+              flexShrink: 0
+            },
+            children: icon
+          }
+        ),
+        /* @__PURE__ */ jsx(
+          "span",
+          {
+            style: {
+              marginLeft: "12px",
+              fontSize: "12px",
+              color: isActive ? "#0a0a0a" : "#e0e0e0",
+              whiteSpace: "nowrap",
+              opacity: isHovered ? 1 : 0,
+              transition: isHovered ? "opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0s" : "opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s"
+            },
+            children: text
+          }
+        )
       ]
     }
   ) });
@@ -314,7 +370,6 @@ var noop = () => {
 var ControlSeparator = () => /* @__PURE__ */ jsx("div", { style: { height: "4px", display: "flex", alignItems: "center", position: "relative" }, children: /* @__PURE__ */ jsx("div", { style: { height: "1px", width: "4px", background: "#2a2a2a" } }) });
 var DeviceControls = ({
   disabled = false,
-  onRotateDevice,
   onTakeScreenshot,
   onDeviceHome,
   onDeviceBack,
@@ -325,28 +380,34 @@ var DeviceControls = ({
   onInstallApp,
   onOpenUrl
 }) => {
-  return /* @__PURE__ */ jsxs("div", { style: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-    zIndex: 1e3,
-    marginLeft: "10px",
-    position: "relative",
-    width: "56px",
-    ...disabled ? { opacity: 0.4, pointerEvents: "none" } : {}
-  }, children: [
-    /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onTakeScreenshot || noop, icon: /* @__PURE__ */ jsx(CameraIcon, {}), text: "Screenshot" }),
-    /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onDeviceHome || noop, icon: /* @__PURE__ */ jsx(HomeIcon, {}), text: "Home" }),
-    onDeviceBack && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onDeviceBack, icon: /* @__PURE__ */ jsx(BackIcon, {}), text: "Back" }),
-    onAppSwitch && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onAppSwitch, icon: /* @__PURE__ */ jsx(AppSwitchIcon, {}), text: "Recents" }),
-    /* @__PURE__ */ jsx(ControlSeparator, {}),
-    /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onIncreaseVolume || noop, icon: /* @__PURE__ */ jsx(VolumeUpIcon, {}), text: "Volume Up" }),
-    /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onDecreaseVolume || noop, icon: /* @__PURE__ */ jsx(VolumeDownIcon, {}), text: "Volume Down" }),
-    /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onTogglePower || noop, icon: /* @__PURE__ */ jsx(PowerIcon, {}), text: "Power" }),
-    (onInstallApp || onOpenUrl) && /* @__PURE__ */ jsx(ControlSeparator, {}),
-    onInstallApp && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onInstallApp, icon: /* @__PURE__ */ jsx(InstallIcon, {}), text: "Install App" }),
-    onOpenUrl && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onOpenUrl, icon: /* @__PURE__ */ jsx(LinkIcon, {}), text: "Open URL" })
-  ] });
+  return /* @__PURE__ */ jsxs(
+    "div",
+    {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        zIndex: 1e3,
+        marginLeft: "10px",
+        position: "relative",
+        width: "56px",
+        ...disabled ? { opacity: 0.4, pointerEvents: "none" } : {}
+      },
+      children: [
+        /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onTakeScreenshot || noop, icon: /* @__PURE__ */ jsx(CameraIcon, {}), text: "Screenshot" }),
+        /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onDeviceHome || noop, icon: /* @__PURE__ */ jsx(HomeIcon, {}), text: "Home" }),
+        onDeviceBack && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onDeviceBack, icon: /* @__PURE__ */ jsx(BackIcon, {}), text: "Back" }),
+        onAppSwitch && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onAppSwitch, icon: /* @__PURE__ */ jsx(AppSwitchIcon, {}), text: "Recents" }),
+        /* @__PURE__ */ jsx(ControlSeparator, {}),
+        /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onIncreaseVolume || noop, icon: /* @__PURE__ */ jsx(VolumeUpIcon, {}), text: "Volume Up" }),
+        /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onDecreaseVolume || noop, icon: /* @__PURE__ */ jsx(VolumeDownIcon, {}), text: "Volume Down" }),
+        /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onTogglePower || noop, icon: /* @__PURE__ */ jsx(PowerIcon, {}), text: "Power" }),
+        (onInstallApp || onOpenUrl) && /* @__PURE__ */ jsx(ControlSeparator, {}),
+        onInstallApp && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onInstallApp, icon: /* @__PURE__ */ jsx(InstallIcon, {}), text: "Install App" }),
+        onOpenUrl && /* @__PURE__ */ jsx(ControlButton, { disabled, onClick: onOpenUrl, icon: /* @__PURE__ */ jsx(LinkIcon, {}), text: "Open URL" })
+      ]
+    }
+  );
 };
 var DeviceState = /* @__PURE__ */ ((DeviceState3) => {
   DeviceState3["UNKNOWN"] = "UNKNOWN";
@@ -355,19 +416,38 @@ var DeviceState = /* @__PURE__ */ ((DeviceState3) => {
   DeviceState3["CONNECTED"] = "CONNECTED";
   return DeviceState3;
 })(DeviceState || {});
-var ViewportSpinner = ({ message }) => /* @__PURE__ */ jsx("div", { style: { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", color: "#888" }, children: /* @__PURE__ */ jsxs("div", { children: [
-  /* @__PURE__ */ jsx("div", { style: {
-    width: "24px",
-    height: "24px",
-    margin: "0 auto 12px",
-    border: "2px solid #333",
-    borderTopColor: "#888",
-    borderRadius: "50%",
-    animation: "device-view-spin 0.6s linear infinite"
-  } }),
-  /* @__PURE__ */ jsx("style", { children: `@keyframes device-view-spin { to { transform: rotate(360deg); } }` }),
-  /* @__PURE__ */ jsx("p", { style: { margin: 0, fontSize: "14px" }, children: message })
-] }) });
+var ViewportSpinner = ({ message }) => /* @__PURE__ */ jsx(
+  "div",
+  {
+    style: {
+      width: "100%",
+      height: "100%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+      color: "#888"
+    },
+    children: /* @__PURE__ */ jsxs("div", { children: [
+      /* @__PURE__ */ jsx(
+        "div",
+        {
+          style: {
+            width: "24px",
+            height: "24px",
+            margin: "0 auto 12px",
+            border: "2px solid #333",
+            borderTopColor: "#888",
+            borderRadius: "50%",
+            animation: "device-view-spin 0.6s linear infinite"
+          }
+        }
+      ),
+      /* @__PURE__ */ jsx("style", { children: `@keyframes device-view-spin { to { transform: rotate(360deg); } }` }),
+      /* @__PURE__ */ jsx("p", { style: { margin: 0, fontSize: "14px" }, children: message })
+    ] })
+  }
+);
 var emptyGestureState = {
   isGesturing: false,
   startTime: 0,
@@ -375,18 +455,7 @@ var emptyGestureState = {
   points: [],
   path: []
 };
-var DeviceViewport = ({
-  screenSize,
-  onTap,
-  onGesture,
-  connectProgressMessage,
-  streamMode,
-  videoRef,
-  canvasRef,
-  state,
-  isBooting,
-  platform
-}) => {
+var DeviceViewport = ({ screenSize, onTap, onGesture, connectProgressMessage, streamMode, videoRef, canvasRef, state, isBooting, platform }) => {
   const [clicks, setClicks] = useState([]);
   const [gestureState, setGestureState] = useState(emptyGestureState);
   const gestureRef = useRef(emptyGestureState);
@@ -521,109 +590,149 @@ var DeviceViewport = ({
         click.id
       )),
       /* @__PURE__ */ jsx("style", { children: `@keyframes device-view-click { from { transform: scale(1); opacity: 1; } to { transform: scale(2); opacity: 0; } }` }),
-      gestureState.isGesturing && gestureState.path.length > 1 && /* @__PURE__ */ jsx("svg", { style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 10 }, children: /* @__PURE__ */ jsx(
-        "polyline",
+      gestureState.isGesturing && gestureState.path.length > 1 && /* @__PURE__ */ jsx(
+        "svg",
         {
-          points: gestureState.path.map(([x, y]) => `${x},${y}`).join(" "),
-          fill: "none",
-          stroke: "rgba(0, 255, 136, 0.6)",
-          strokeWidth: "2",
-          strokeLinecap: "round",
-          strokeLinejoin: "round"
+          style: {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            pointerEvents: "none",
+            zIndex: 10
+          },
+          children: /* @__PURE__ */ jsx(
+            "polyline",
+            {
+              points: gestureState.path.map(([x, y]) => `${x},${y}`).join(" "),
+              fill: "none",
+              stroke: "rgba(0, 255, 136, 0.6)",
+              strokeWidth: "2",
+              strokeLinecap: "round",
+              strokeLinejoin: "round"
+            }
+          )
         }
-      ) })
+      )
     ] })
   ] });
 };
-var DeviceInstance = forwardRef(({
-  state,
-  connectProgressMessage,
-  selectedDevice,
-  screenSize,
-  deviceSkin,
-  onTap,
-  onGesture,
-  onKeyDown,
-  onRotateDevice,
-  onTakeScreenshot,
-  onDeviceHome,
-  onDeviceBack,
-  onAppSwitch,
-  onIncreaseVolume,
-  onDecreaseVolume,
-  onTogglePower,
-  onInstallApp,
-  onOpenUrl,
-  showControls = true,
-  streamMode = "canvas",
-  videoRef,
-  isBooting
-}, ref) => {
-  const canvasRef = useRef(null);
-  useImperativeHandle(ref, () => ({
-    getCanvas: () => canvasRef.current
-  }));
-  return /* @__PURE__ */ jsx(
-    "div",
-    {
-      style: {
-        position: "relative",
-        flexGrow: 1,
-        // height:100% lets this fill the (bounded) box the host gives us, so the
-        // definite height propagates all the way down to the video/skin. Without
-        // it every wrapper is content-sized and we'd be forced back to viewport units.
-        height: "100%",
-        // border-box keeps the 24px padding *inside* height:100%. Under the
-        // default content-box the padding is added on top, so the element renders
-        // 48px taller than the host's box and overflows it — bleeding over the
-        // chrome above and pushing the bottom padding out of view.
-        boxSizing: "border-box",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "visible",
-        backgroundColor: "#202224",
-        paddingTop: "24px",
-        paddingBottom: "24px",
-        outline: "none"
-      },
-      tabIndex: 0,
-      onKeyDown: (e) => onKeyDown(e.key),
-      children: /* @__PURE__ */ jsx("div", { style: { position: "relative", height: "100%", overflow: "visible" }, children: /* @__PURE__ */ jsx("div", { style: { width: "100%", height: "100%", overflow: "visible" }, children: /* @__PURE__ */ jsx("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "white" }, children: /* @__PURE__ */ jsxs("div", { style: { position: "relative", height: "100%", display: "flex", alignItems: "center" }, children: [
-        /* @__PURE__ */ jsx(DeviceSkinComponent, { deviceSkin, screenSize, children: /* @__PURE__ */ jsx(
-          DeviceViewport,
+var DeviceInstance = forwardRef(
+  ({
+    state,
+    connectProgressMessage,
+    selectedDevice,
+    screenSize,
+    deviceSkin,
+    onTap,
+    onGesture,
+    onKeyDown,
+    onRotateDevice,
+    onTakeScreenshot,
+    onDeviceHome,
+    onDeviceBack,
+    onAppSwitch,
+    onIncreaseVolume,
+    onDecreaseVolume,
+    onTogglePower,
+    onInstallApp,
+    onOpenUrl,
+    showControls = true,
+    streamMode = "canvas",
+    videoRef,
+    isBooting
+  }, ref) => {
+    const canvasRef = useRef(null);
+    useImperativeHandle(ref, () => ({
+      getCanvas: () => canvasRef.current
+    }));
+    return /* @__PURE__ */ jsx(
+      "div",
+      {
+        style: {
+          position: "relative",
+          flexGrow: 1,
+          // height:100% lets this fill the (bounded) box the host gives us, so the
+          // definite height propagates all the way down to the video/skin. Without
+          // it every wrapper is content-sized and we'd be forced back to viewport units.
+          height: "100%",
+          // border-box keeps the 24px padding *inside* height:100%. Under the
+          // default content-box the padding is added on top, so the element renders
+          // 48px taller than the host's box and overflows it — bleeding over the
+          // chrome above and pushing the bottom padding out of view.
+          boxSizing: "border-box",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          backgroundColor: "#202224",
+          paddingTop: "24px",
+          paddingBottom: "24px",
+          outline: "none"
+        },
+        tabIndex: 0,
+        onKeyDown: (e) => onKeyDown(e.key),
+        children: /* @__PURE__ */ jsx("div", { style: { position: "relative", height: "100%", overflow: "visible" }, children: /* @__PURE__ */ jsx("div", { style: { width: "100%", height: "100%", overflow: "visible" }, children: /* @__PURE__ */ jsx(
+          "div",
           {
-            screenSize,
-            onTap,
-            onGesture,
-            connectProgressMessage,
-            streamMode,
-            canvasRef,
-            videoRef,
-            state,
-            isBooting,
-            platform: selectedDevice.platform === "android" /* ANDROID */ ? "android" : "ios"
+            style: {
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              color: "white"
+            },
+            children: /* @__PURE__ */ jsxs(
+              "div",
+              {
+                style: {
+                  position: "relative",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center"
+                },
+                children: [
+                  /* @__PURE__ */ jsx(DeviceSkinComponent, { deviceSkin, screenSize, children: /* @__PURE__ */ jsx(
+                    DeviceViewport,
+                    {
+                      screenSize,
+                      onTap,
+                      onGesture,
+                      connectProgressMessage,
+                      streamMode,
+                      canvasRef,
+                      videoRef,
+                      state,
+                      isBooting,
+                      platform: selectedDevice.platform === "android" /* ANDROID */ ? "android" : "ios"
+                    }
+                  ) }),
+                  showControls && /* @__PURE__ */ jsx(
+                    DeviceControls,
+                    {
+                      onRotateDevice,
+                      onTakeScreenshot,
+                      onDeviceHome,
+                      onDeviceBack: selectedDevice.platform === "android" ? onDeviceBack : void 0,
+                      onAppSwitch: selectedDevice.platform === "android" ? onAppSwitch : void 0,
+                      onIncreaseVolume,
+                      onDecreaseVolume,
+                      onTogglePower,
+                      onInstallApp,
+                      onOpenUrl
+                    }
+                  )
+                ]
+              }
+            )
           }
-        ) }),
-        showControls && /* @__PURE__ */ jsx(
-          DeviceControls,
-          {
-            onRotateDevice,
-            onTakeScreenshot,
-            onDeviceHome,
-            onDeviceBack: selectedDevice.platform === "android" ? onDeviceBack : void 0,
-            onAppSwitch: selectedDevice.platform === "android" ? onAppSwitch : void 0,
-            onIncreaseVolume,
-            onDecreaseVolume,
-            onTogglePower,
-            onInstallApp,
-            onOpenUrl
-          }
-        )
-      ] }) }) }) })
-    }
-  );
-});
+        ) }) })
+      }
+    );
+  }
+);
 DeviceInstance.displayName = "DeviceInstance";
 
 // src/skins/pixel9.ts
@@ -758,7 +867,7 @@ var JsonRpcClient = class {
     const response = await fetch(authUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${this.authToken}`,
+        Authorization: `Bearer ${this.authToken}`,
         "Content-Type": "application/json"
       }
     });
@@ -932,12 +1041,14 @@ var JsonRpcClient = class {
     while (this.messageQueue.length > 0 && this.wsState === "connected" /* CONNECTED */) {
       const msg = this.messageQueue.shift();
       if (msg && this.ws) {
-        this.ws.send(JSON.stringify({
-          jsonrpc: JSON_RPC_VERSION,
-          id: msg.id,
-          method: msg.method,
-          params: msg.params
-        }));
+        this.ws.send(
+          JSON.stringify({
+            jsonrpc: JSON_RPC_VERSION,
+            id: msg.id,
+            method: msg.method,
+            params: msg.params
+          })
+        );
       }
     }
   }
@@ -1031,7 +1142,15 @@ var DeviceClient = class {
 };
 var NoOpDeviceClient = class {
   async getDeviceInfo() {
-    return { device: { id: "", name: "", platform: "", type: "", screenSize: { width: 0, height: 0, scale: 1 } } };
+    return {
+      device: {
+        id: "",
+        name: "",
+        platform: "",
+        type: "",
+        screenSize: { width: 0, height: 0, scale: 1 }
+      }
+    };
   }
   async boot() {
   }
@@ -1483,9 +1602,7 @@ var WebRtcStream = class {
           ssrc = r.ssrc;
         }
       });
-      console.log(
-        `device-view: session correlation sessionId=${this.session.sessionId} ssrc=${ssrc ?? "unknown"} utc=${(/* @__PURE__ */ new Date()).toISOString()}`
-      );
+      console.log(`device-view: session correlation sessionId=${this.session.sessionId} ssrc=${ssrc ?? "unknown"} utc=${(/* @__PURE__ */ new Date()).toISOString()}`);
     } catch (err) {
       console.warn("device-view: failed to log session identity:", err);
     }
@@ -1698,9 +1815,9 @@ function useDeviceInteraction({ deviceClient, selectedDevice }) {
   };
   const handleKeyDown = async (key) => {
     const keyMap = {
-      "Enter": "\n",
-      "Backspace": "\b",
-      "Delete": "\x7F",
+      Enter: "\n",
+      Backspace: "\b",
+      Delete: "\x7F",
       " ": " "
     };
     let text;
@@ -1800,15 +1917,7 @@ var BootingDeviceView = ({ platform, showControls = true }) => /* @__PURE__ */ j
       paddingBottom: "24px"
     },
     children: /* @__PURE__ */ jsxs("div", { style: { position: "relative", height: "100%", display: "flex", alignItems: "center" }, children: [
-      /* @__PURE__ */ jsx(
-        NinePatchSkinView,
-        {
-          skin: platform === "android" ? androidNinePatchSkin : iosNinePatchSkin,
-          screenSize: PLACEHOLDER_SCREEN_SIZE,
-          isBooting: true,
-          children: /* @__PURE__ */ jsx("div", { style: { width: "100%", height: "100%", background: "#000" } })
-        }
-      ),
+      /* @__PURE__ */ jsx(NinePatchSkinView, { skin: platform === "android" ? androidNinePatchSkin : iosNinePatchSkin, screenSize: PLACEHOLDER_SCREEN_SIZE, isBooting: true, children: /* @__PURE__ */ jsx("div", { style: { width: "100%", height: "100%", background: "#000" } }) }),
       showControls && /* @__PURE__ */ jsx(
         DeviceControls,
         {
@@ -1828,368 +1937,378 @@ var BootingDeviceView = ({ platform, showControls = true }) => /* @__PURE__ */ j
 function isWebRtcResponse(response) {
   return typeof response === "object" && response !== null && typeof response.sessionId === "string" && typeof response.webrtcServerUrl === "string";
 }
-var Spinner = ({ message }) => /* @__PURE__ */ jsx("div", { style: {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "100%",
-  height: "100%",
-  backgroundColor: "#202224",
-  color: "#888"
-}, children: /* @__PURE__ */ jsxs("div", { style: { textAlign: "center" }, children: [
-  /* @__PURE__ */ jsx("div", { style: {
-    width: "24px",
-    height: "24px",
-    margin: "0 auto 12px",
-    border: "2px solid #333",
-    borderTopColor: "#888",
-    borderRadius: "50%",
-    animation: "device-view-spin 0.6s linear infinite"
-  } }),
-  /* @__PURE__ */ jsx("style", { children: `@keyframes device-view-spin { to { transform: rotate(360deg); } }` }),
-  /* @__PURE__ */ jsx("p", { style: { margin: 0, fontSize: "14px" }, children: message || "Loading..." })
-] }) });
-var DeviceView = forwardRef(({
-  serverUrl,
-  token,
-  deviceId,
-  platform,
-  showControls = true,
-  onError,
-  onConnected,
-  onFirstFrame,
-  onDisconnected,
-  onInstallApp,
-  onOpenUrl
-}, ref) => {
-  const [deviceState, setDeviceState] = useState("UNKNOWN" /* UNKNOWN */);
-  const [connectProgressMessage, setConnectProgressMessage] = useState(null);
-  const [imageBitmap, setImageBitmap] = useState(null);
-  const [streamMode, setStreamMode] = useState("canvas");
-  const [webrtcMediaStream, setWebrtcMediaStream] = useState(null);
-  const [deviceSkin, setDeviceSkin] = useState(NoDeviceSkin);
-  const [selectedDevice, setSelectedDevice] = useState(null);
-  const [isBooting, setIsBooting] = useState(true);
-  const screenSizeRef = useRef({ width: 0, height: 0, scale: 1 });
-  const mjpegStreamRef = useRef(null);
-  const avcStreamRef = useRef(null);
-  const webrtcStreamRef = useRef(null);
-  const streamReaderRef = useRef(null);
-  const streamControllerRef = useRef(null);
-  const deviceStreamRef = useRef(null);
-  const videoRef = useRef(null);
-  const imageBitmapRef = useRef(null);
-  const streamingDeviceIdRef = useRef(null);
-  const streamGenerationRef = useRef(0);
-  const jsonRpcClientRef = useRef(null);
-  const firstFrameSeenRef = useRef(false);
-  const markFirstFrame = () => {
-    if (firstFrameSeenRef.current) return;
-    firstFrameSeenRef.current = true;
-    setIsBooting(false);
-    onFirstFrame?.();
-  };
-  const getOrCreateClient = () => {
-    if (!jsonRpcClientRef.current || jsonRpcClientRef.current.isDisconnected) {
-      jsonRpcClientRef.current = new JsonRpcClient(serverUrl, void 0, token);
-    }
-    return jsonRpcClientRef.current;
-  };
-  const getDeviceClient = () => {
-    return new DeviceClient(getOrCreateClient(), deviceId);
-  };
-  const {
-    handleTap,
-    handleGesture,
-    handleKeyDown,
-    onHome,
-    onBack,
-    onAppSwitch,
-    onPower,
-    onRotateDevice,
-    onIncreaseVolume,
-    onDecreaseVolume,
-    onTakeScreenshot
-  } = useDeviceInteraction({
-    selectedDevice,
-    deviceClient: getDeviceClient()
-  });
-  useImperativeHandle(ref, () => ({
-    takeScreenshot: onTakeScreenshot,
-    home: onHome,
-    volumeUp: onIncreaseVolume,
-    volumeDown: onDecreaseVolume
-  }), [onTakeScreenshot, onHome, onIncreaseVolume, onDecreaseVolume]);
-  useEffect(() => {
-    if (!webrtcMediaStream || !videoRef.current) return;
-    const video = videoRef.current;
-    video.srcObject = webrtcMediaStream;
-    video.muted = true;
-    if (typeof video.requestVideoFrameCallback === "function") {
-      video.requestVideoFrameCallback(() => markFirstFrame());
-    } else {
-      video.addEventListener("playing", () => markFirstFrame(), { once: true });
-    }
-    video.play().catch((error) => {
-      console.error("device-view: error playing WebRTC stream:", error);
-    });
-  }, [webrtcMediaStream]);
-  useEffect(() => {
-    if (imageBitmap && deviceStreamRef.current) {
-      const canvas = deviceStreamRef.current.getCanvas();
-      if (canvas) {
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          const currentScreenSize = screenSizeRef.current;
-          canvas.width = currentScreenSize.width;
-          canvas.height = currentScreenSize.height;
-          if (imageBitmap.width > 0 && imageBitmap.height > 0) {
-            ctx.drawImage(imageBitmap, 0, 0, currentScreenSize.width, currentScreenSize.height);
+var Spinner = ({ message }) => /* @__PURE__ */ jsx(
+  "div",
+  {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "100%",
+      height: "100%",
+      backgroundColor: "#202224",
+      color: "#888"
+    },
+    children: /* @__PURE__ */ jsxs("div", { style: { textAlign: "center" }, children: [
+      /* @__PURE__ */ jsx(
+        "div",
+        {
+          style: {
+            width: "24px",
+            height: "24px",
+            margin: "0 auto 12px",
+            border: "2px solid #333",
+            borderTopColor: "#888",
+            borderRadius: "50%",
+            animation: "device-view-spin 0.6s linear infinite"
           }
         }
+      ),
+      /* @__PURE__ */ jsx("style", { children: `@keyframes device-view-spin { to { transform: rotate(360deg); } }` }),
+      /* @__PURE__ */ jsx("p", { style: { margin: 0, fontSize: "14px" }, children: message || "Loading..." })
+    ] })
+  }
+);
+var DeviceView = forwardRef(
+  ({ serverUrl, token, deviceId, platform, showControls = true, onError, onConnected, onFirstFrame, onDisconnected, onInstallApp, onOpenUrl }, ref) => {
+    const [deviceState, setDeviceState] = useState("UNKNOWN" /* UNKNOWN */);
+    const [connectProgressMessage, setConnectProgressMessage] = useState(null);
+    const [imageBitmap, setImageBitmap] = useState(null);
+    const [streamMode, setStreamMode] = useState("canvas");
+    const [webrtcMediaStream, setWebrtcMediaStream] = useState(null);
+    const [deviceSkin, setDeviceSkin] = useState(NoDeviceSkin);
+    const [selectedDevice, setSelectedDevice] = useState(null);
+    const [isBooting, setIsBooting] = useState(true);
+    const screenSizeRef = useRef({ width: 0, height: 0, scale: 1 });
+    const mjpegStreamRef = useRef(null);
+    const avcStreamRef = useRef(null);
+    const webrtcStreamRef = useRef(null);
+    const streamReaderRef = useRef(null);
+    const streamControllerRef = useRef(null);
+    const deviceStreamRef = useRef(null);
+    const videoRef = useRef(null);
+    const imageBitmapRef = useRef(null);
+    const streamingDeviceIdRef = useRef(null);
+    const streamGenerationRef = useRef(0);
+    const jsonRpcClientRef = useRef(null);
+    const firstFrameSeenRef = useRef(false);
+    const markFirstFrame = () => {
+      if (firstFrameSeenRef.current) return;
+      firstFrameSeenRef.current = true;
+      setIsBooting(false);
+      onFirstFrame?.();
+    };
+    const getOrCreateClient = () => {
+      if (!jsonRpcClientRef.current || jsonRpcClientRef.current.isDisconnected) {
+        jsonRpcClientRef.current = new JsonRpcClient(serverUrl, void 0, token);
       }
-    }
-  }, [imageBitmap]);
-  const onJpegFrame = async (body) => {
-    try {
-      const blob = new Blob([body], { type: "image/jpeg" });
-      const newImageBitmap = await createImageBitmap(blob);
-      setDeviceState("CONNECTED" /* CONNECTED */);
-      markFirstFrame();
-      setImageBitmap((prev) => {
-        if (prev) prev.close();
-        return newImageBitmap;
+      return jsonRpcClientRef.current;
+    };
+    const getDeviceClient = () => {
+      return new DeviceClient(getOrCreateClient(), deviceId);
+    };
+    const {
+      handleTap,
+      handleGesture,
+      handleKeyDown,
+      onHome,
+      onBack,
+      onAppSwitch,
+      onPower,
+      onRotateDevice,
+      onIncreaseVolume,
+      onDecreaseVolume,
+      onTakeScreenshot
+    } = useDeviceInteraction({
+      selectedDevice,
+      deviceClient: getDeviceClient()
+    });
+    useImperativeHandle(
+      ref,
+      () => ({
+        takeScreenshot: onTakeScreenshot,
+        home: onHome,
+        volumeUp: onIncreaseVolume,
+        volumeDown: onDecreaseVolume
+      }),
+      [onTakeScreenshot, onHome, onIncreaseVolume, onDecreaseVolume]
+    );
+    useEffect(() => {
+      if (!webrtcMediaStream || !videoRef.current) return;
+      const video = videoRef.current;
+      video.srcObject = webrtcMediaStream;
+      video.muted = true;
+      if (typeof video.requestVideoFrameCallback === "function") {
+        video.requestVideoFrameCallback(() => markFirstFrame());
+      } else {
+        video.addEventListener("playing", () => markFirstFrame(), { once: true });
+      }
+      video.play().catch((error) => {
+        console.error("device-view: error playing WebRTC stream:", error);
       });
-    } catch (error) {
-      console.error("device-view: error displaying MJPEG frame:", error);
-    }
-  };
-  const onJsonFrame = async (body) => {
-    try {
-      const bodyText = new TextDecoder().decode(body);
-      const jsonData = JSON.parse(bodyText);
-      if (jsonData.jsonrpc === "2.0" && jsonData.method === "notification/message" && jsonData.params?.message) {
-        setConnectProgressMessage(jsonData.params.message);
-      }
-    } catch (error) {
-      console.error("device-view: error parsing JSON-RPC notification:", error);
-    }
-  };
-  const onFrame = async (mimeType, body) => {
-    if (mimeType === "image/jpeg") await onJpegFrame(body);
-    else if (mimeType === "application/json") await onJsonFrame(body);
-  };
-  const onAvcFrame = async (frame) => {
-    try {
-      setDeviceState("CONNECTED" /* CONNECTED */);
-      markFirstFrame();
-      if (deviceStreamRef.current) {
+    }, [webrtcMediaStream]);
+    useEffect(() => {
+      if (imageBitmap && deviceStreamRef.current) {
         const canvas = deviceStreamRef.current.getCanvas();
         if (canvas) {
           const ctx = canvas.getContext("2d");
           if (ctx) {
             const currentScreenSize = screenSizeRef.current;
-            if (canvas.width !== currentScreenSize.width || canvas.height !== currentScreenSize.height) {
-              canvas.width = currentScreenSize.width;
-              canvas.height = currentScreenSize.height;
+            canvas.width = currentScreenSize.width;
+            canvas.height = currentScreenSize.height;
+            if (imageBitmap.width > 0 && imageBitmap.height > 0) {
+              ctx.drawImage(imageBitmap, 0, 0, currentScreenSize.width, currentScreenSize.height);
             }
-            ctx.drawImage(frame, 0, 0, currentScreenSize.width, currentScreenSize.height);
           }
         }
       }
-      frame.close();
-    } catch (error) {
-      console.error("device-view: error displaying AVC frame:", error);
-    }
-  };
-  const wsUrlToHttpUrl = (wsUrl) => {
-    const url = new URL(wsUrl);
-    const protocol = url.protocol === "wss:" ? "https:" : "http:";
-    return `${protocol}//${url.host}`;
-  };
-  const startStream = async (devId, format) => {
-    const generation = streamGenerationRef.current;
-    try {
-      firstFrameSeenRef.current = false;
-      setIsBooting(true);
-      setDeviceState("CONNECTING" /* CONNECTING */);
-      const scale = format === "avc" ? 0.5 : void 0;
-      const client = getDeviceClient();
-      const response = await client.screenCaptureStart(format, scale);
-      if (generation !== streamGenerationRef.current) return;
-      const handleStreamError = (error) => {
-        console.error(`device-view: error from ${format} stream:`, error);
-        onError?.(error);
-      };
-      if (isWebRtcResponse(response)) {
-        const result = response;
-        const session = {
-          sessionId: result.sessionId,
-          webrtcServerUrl: result.webrtcServerUrl,
-          iceServers: result.iceServers
-        };
-        setStreamMode("video");
-        const webrtcStream = new WebRtcStream(session, {
-          onTrack: (stream) => {
-            setDeviceState("CONNECTED" /* CONNECTED */);
-            onConnected?.();
-            setWebrtcMediaStream(stream);
-          },
-          onError: handleStreamError
+    }, [imageBitmap]);
+    const onJpegFrame = async (body) => {
+      try {
+        const blob = new Blob([body], { type: "image/jpeg" });
+        const newImageBitmap = await createImageBitmap(blob);
+        setDeviceState("CONNECTED" /* CONNECTED */);
+        markFirstFrame();
+        setImageBitmap((prev) => {
+          if (prev) prev.close();
+          return newImageBitmap;
         });
-        webrtcStreamRef.current = webrtcStream;
-        await webrtcStream.start();
-        return;
+      } catch (error) {
+        console.error("device-view: error displaying MJPEG frame:", error);
       }
-      if (!response.sessionUrl) {
-        throw new Error("No sessionUrl in response");
+    };
+    const onJsonFrame = async (body) => {
+      try {
+        const bodyText = new TextDecoder().decode(body);
+        const jsonData = JSON.parse(bodyText);
+        if (jsonData.jsonrpc === "2.0" && jsonData.method === "notification/message" && jsonData.params?.message) {
+          setConnectProgressMessage(jsonData.params.message);
+        }
+      } catch (error) {
+        console.error("device-view: error parsing JSON-RPC notification:", error);
       }
-      const httpBaseUrl = wsUrlToHttpUrl(serverUrl);
-      const streamUrl = `${httpBaseUrl}${response.sessionUrl}`;
-      const streamResponse = await fetch(streamUrl);
-      if (!streamResponse.ok) throw new Error(`Stream fetch failed: ${streamResponse.status}`);
-      if (!streamResponse.body) throw new Error("ReadableStream not supported");
-      const controller = new AbortController();
-      const reader = streamResponse.body.getReader();
-      streamControllerRef.current = controller;
-      streamReaderRef.current = reader;
-      if (format === "avc") {
-        const currentScreenSize = screenSizeRef.current;
-        const width = scale ? Math.floor((currentScreenSize.width || 1080) * scale) : currentScreenSize.width || 1080;
-        const height = scale ? Math.floor((currentScreenSize.height || 1920) * scale) : currentScreenSize.height || 1920;
-        const stream = new AvcStream(reader, { onFrame: onAvcFrame, onError: handleStreamError, width, height });
-        setStreamMode("canvas");
-        avcStreamRef.current = stream;
-        stream.start();
-      } else {
-        const stream = new MjpegStream(reader, { onFrame, onError: handleStreamError });
-        setStreamMode("canvas");
-        mjpegStreamRef.current = stream;
-        stream.start();
+    };
+    const onFrame = async (mimeType, body) => {
+      if (mimeType === "image/jpeg") await onJpegFrame(body);
+      else if (mimeType === "application/json") await onJsonFrame(body);
+    };
+    const onAvcFrame = async (frame) => {
+      try {
+        setDeviceState("CONNECTED" /* CONNECTED */);
+        markFirstFrame();
+        if (deviceStreamRef.current) {
+          const canvas = deviceStreamRef.current.getCanvas();
+          if (canvas) {
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              const currentScreenSize = screenSizeRef.current;
+              if (canvas.width !== currentScreenSize.width || canvas.height !== currentScreenSize.height) {
+                canvas.width = currentScreenSize.width;
+                canvas.height = currentScreenSize.height;
+              }
+              ctx.drawImage(frame, 0, 0, currentScreenSize.width, currentScreenSize.height);
+            }
+          }
+        }
+        frame.close();
+      } catch (error) {
+        console.error("device-view: error displaying AVC frame:", error);
       }
-      onConnected?.();
-    } catch (error) {
-      console.error(`device-view: error starting ${format} stream:`, error);
-      onError?.(error instanceof Error ? error : new Error(String(error)));
-    }
-  };
-  const stopStream = () => {
-    streamGenerationRef.current++;
-    streamingDeviceIdRef.current = null;
-    if (mjpegStreamRef.current) {
-      mjpegStreamRef.current.stop();
-      mjpegStreamRef.current = null;
-    }
-    if (avcStreamRef.current) {
-      avcStreamRef.current.stop();
-      avcStreamRef.current = null;
-    }
-    if (streamControllerRef.current) {
-      streamControllerRef.current.abort();
-      streamControllerRef.current = null;
-    }
-    if (streamReaderRef.current) {
-      streamReaderRef.current = null;
-    }
-    if (webrtcStreamRef.current) {
-      webrtcStreamRef.current.stop();
-      webrtcStreamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.srcObject = null;
-    }
-    setWebrtcMediaStream(null);
-    if (imageBitmapRef.current) {
-      imageBitmapRef.current.close();
-      imageBitmapRef.current = null;
-    }
-    setImageBitmap(null);
-    onDisconnected?.();
-  };
-  useEffect(() => {
-    if (!deviceId) return;
-    let cancelled = false;
-    stopStream();
-    const rpcClient = new JsonRpcClient(serverUrl, void 0, token);
-    jsonRpcClientRef.current = rpcClient;
-    streamingDeviceIdRef.current = deviceId;
-    const client = new DeviceClient(rpcClient, deviceId);
-    client.getDeviceInfo().then((result) => {
-      if (cancelled || !result?.device) return;
-      screenSizeRef.current = result.device.screenSize;
-      const descriptor = {
-        id: result.device.id,
-        name: result.device.name,
-        model: result.device.model,
-        platform: result.device.platform,
-        type: result.device.type
+    };
+    const wsUrlToHttpUrl = (wsUrl) => {
+      const url = new URL(wsUrl);
+      const protocol = url.protocol === "wss:" ? "https:" : "http:";
+      return `${protocol}//${url.host}`;
+    };
+    const startStream = async (devId, format) => {
+      const generation = streamGenerationRef.current;
+      try {
+        firstFrameSeenRef.current = false;
+        setIsBooting(true);
+        setDeviceState("CONNECTING" /* CONNECTING */);
+        const scale = format === "avc" ? 0.5 : void 0;
+        const client = getDeviceClient();
+        const response = await client.screenCaptureStart(format, scale);
+        if (generation !== streamGenerationRef.current) return;
+        const handleStreamError = (error) => {
+          console.error(`device-view: error from ${format} stream:`, error);
+          onError?.(error);
+        };
+        if (isWebRtcResponse(response)) {
+          const result = response;
+          const session = {
+            sessionId: result.sessionId,
+            webrtcServerUrl: result.webrtcServerUrl,
+            iceServers: result.iceServers
+          };
+          setStreamMode("video");
+          const webrtcStream = new WebRtcStream(session, {
+            onTrack: (stream) => {
+              setDeviceState("CONNECTED" /* CONNECTED */);
+              onConnected?.();
+              setWebrtcMediaStream(stream);
+            },
+            onError: handleStreamError
+          });
+          webrtcStreamRef.current = webrtcStream;
+          await webrtcStream.start();
+          return;
+        }
+        if (!response.sessionUrl) {
+          throw new Error("No sessionUrl in response");
+        }
+        const httpBaseUrl = wsUrlToHttpUrl(serverUrl);
+        const streamUrl = `${httpBaseUrl}${response.sessionUrl}`;
+        const streamResponse = await fetch(streamUrl);
+        if (!streamResponse.ok) throw new Error(`Stream fetch failed: ${streamResponse.status}`);
+        if (!streamResponse.body) throw new Error("ReadableStream not supported");
+        const controller = new AbortController();
+        const reader = streamResponse.body.getReader();
+        streamControllerRef.current = controller;
+        streamReaderRef.current = reader;
+        if (format === "avc") {
+          const currentScreenSize = screenSizeRef.current;
+          const width = scale ? Math.floor((currentScreenSize.width || 1080) * scale) : currentScreenSize.width || 1080;
+          const height = scale ? Math.floor((currentScreenSize.height || 1920) * scale) : currentScreenSize.height || 1920;
+          const stream = new AvcStream(reader, {
+            onFrame: onAvcFrame,
+            onError: handleStreamError,
+            width,
+            height
+          });
+          setStreamMode("canvas");
+          avcStreamRef.current = stream;
+          stream.start();
+        } else {
+          const stream = new MjpegStream(reader, { onFrame, onError: handleStreamError });
+          setStreamMode("canvas");
+          mjpegStreamRef.current = stream;
+          stream.start();
+        }
+        onConnected?.();
+      } catch (error) {
+        console.error(`device-view: error starting ${format} stream:`, error);
+        onError?.(error instanceof Error ? error : new Error(String(error)));
+      }
+    };
+    const stopStream = () => {
+      streamGenerationRef.current++;
+      streamingDeviceIdRef.current = null;
+      if (mjpegStreamRef.current) {
+        mjpegStreamRef.current.stop();
+        mjpegStreamRef.current = null;
+      }
+      if (avcStreamRef.current) {
+        avcStreamRef.current.stop();
+        avcStreamRef.current = null;
+      }
+      if (streamControllerRef.current) {
+        streamControllerRef.current.abort();
+        streamControllerRef.current = null;
+      }
+      if (streamReaderRef.current) {
+        streamReaderRef.current = null;
+      }
+      if (webrtcStreamRef.current) {
+        webrtcStreamRef.current.stop();
+        webrtcStreamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.srcObject = null;
+      }
+      setWebrtcMediaStream(null);
+      if (imageBitmapRef.current) {
+        imageBitmapRef.current.close();
+        imageBitmapRef.current = null;
+      }
+      setImageBitmap(null);
+      onDisconnected?.();
+    };
+    useEffect(() => {
+      if (!deviceId) return;
+      let cancelled = false;
+      stopStream();
+      const rpcClient = new JsonRpcClient(serverUrl, void 0, token);
+      jsonRpcClientRef.current = rpcClient;
+      streamingDeviceIdRef.current = deviceId;
+      const client = new DeviceClient(rpcClient, deviceId);
+      client.getDeviceInfo().then((result) => {
+        if (cancelled || !result?.device) return;
+        screenSizeRef.current = result.device.screenSize;
+        const descriptor = {
+          id: result.device.id,
+          name: result.device.name,
+          model: result.device.model,
+          platform: result.device.platform,
+          type: result.device.type
+        };
+        setSelectedDevice(descriptor);
+        setDeviceSkin(getDeviceSkinForDevice(descriptor));
+        let format = "mjpeg";
+        if (descriptor.platform === "android" /* ANDROID */) {
+          format = "avc";
+        } else if (descriptor.platform === "ios" /* IOS */ && descriptor.type === "real" /* REAL */) {
+          format = "avc";
+        }
+        if (!cancelled) {
+          startStream(deviceId, format);
+        }
+      }).catch((error) => {
+        if (cancelled) return;
+        console.error("device-view: failed to get device info:", error);
+        onError?.(error instanceof Error ? error : new Error(String(error)));
+      });
+      return () => {
+        cancelled = true;
+        stopStream();
+        if (jsonRpcClientRef.current === rpcClient) {
+          rpcClient.disconnect();
+          jsonRpcClientRef.current = null;
+        }
       };
-      setSelectedDevice(descriptor);
-      setDeviceSkin(getDeviceSkinForDevice(descriptor));
-      let format = "mjpeg";
-      if (descriptor.platform === "android" /* ANDROID */) {
-        format = "avc";
-      } else if (descriptor.platform === "ios" /* IOS */ && descriptor.type === "real" /* REAL */) {
-        format = "avc";
+    }, [deviceId, serverUrl, token]);
+    useEffect(() => {
+      return () => {
+        stopStream();
+      };
+    }, []);
+    if (!selectedDevice) {
+      if (platform) {
+        return /* @__PURE__ */ jsx(BootingDeviceView, { platform, showControls });
       }
-      if (!cancelled) {
-        startStream(deviceId, format);
-      }
-    }).catch((error) => {
-      if (cancelled) return;
-      console.error("device-view: failed to get device info:", error);
-      onError?.(error instanceof Error ? error : new Error(String(error)));
-    });
-    return () => {
-      cancelled = true;
-      stopStream();
-      if (jsonRpcClientRef.current === rpcClient) {
-        rpcClient.disconnect();
-        jsonRpcClientRef.current = null;
-      }
-    };
-  }, [deviceId, serverUrl, token]);
-  useEffect(() => {
-    return () => {
-      stopStream();
-    };
-  }, []);
-  if (!selectedDevice) {
-    if (platform) {
-      return /* @__PURE__ */ jsx(BootingDeviceView, { platform, showControls });
+      return /* @__PURE__ */ jsx(Spinner, { message: "Loading device..." });
     }
-    return /* @__PURE__ */ jsx(Spinner, { message: "Loading device..." });
+    return /* @__PURE__ */ jsx(
+      DeviceInstance,
+      {
+        ref: deviceStreamRef,
+        state: deviceState,
+        isBooting,
+        connectProgressMessage: connectProgressMessage || void 0,
+        selectedDevice,
+        screenSize: screenSizeRef.current,
+        deviceSkin,
+        streamMode,
+        videoRef,
+        onTap: handleTap,
+        onGesture: handleGesture,
+        onKeyDown: handleKeyDown,
+        onRotateDevice,
+        onTakeScreenshot,
+        onDeviceHome: onHome,
+        onDeviceBack: onBack,
+        onAppSwitch,
+        onIncreaseVolume,
+        onDecreaseVolume,
+        onTogglePower: onPower,
+        onInstallApp,
+        onOpenUrl,
+        showControls
+      }
+    );
   }
-  return /* @__PURE__ */ jsx(
-    DeviceInstance,
-    {
-      ref: deviceStreamRef,
-      state: deviceState,
-      isBooting,
-      connectProgressMessage: connectProgressMessage || void 0,
-      selectedDevice,
-      screenSize: screenSizeRef.current,
-      deviceSkin,
-      streamMode,
-      videoRef,
-      onTap: handleTap,
-      onGesture: handleGesture,
-      onKeyDown: handleKeyDown,
-      onRotateDevice,
-      onTakeScreenshot,
-      onDeviceHome: onHome,
-      onDeviceBack: onBack,
-      onAppSwitch,
-      onIncreaseVolume,
-      onDecreaseVolume,
-      onTogglePower: onPower,
-      onInstallApp,
-      onOpenUrl,
-      showControls
-    }
-  );
-});
+);
 DeviceView.displayName = "DeviceView";
 
 export { AvcStream, BootScreen, BootingDeviceView, ConnectionError, DeviceClient, DeviceControls, DeviceInstance, DevicePlatform, DeviceState, DeviceType, DeviceView, DeviceViewport, JsonRpcClient, MjpegStream, NinePatchSkinView, NoDeviceSkin, WebRtcStream, androidNinePatchSkin, createNoOpDeviceClient, getDeviceSkinForDevice, iosNinePatchSkin, mapButtonTop, nativeFrameSize, nativeScreenSlot };

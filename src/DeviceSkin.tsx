@@ -21,7 +21,11 @@ const frameImageStyle: React.CSSProperties = {
 
 export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({ deviceSkin, screenSize, children }) => {
   if (deviceSkin.ninePatch) {
-    return <NinePatchSkinView skin={deviceSkin.ninePatch} screenSize={screenSize}>{children}</NinePatchSkinView>;
+    return (
+      <NinePatchSkinView skin={deviceSkin.ninePatch} screenSize={screenSize}>
+        {children}
+      </NinePatchSkinView>
+    );
   }
   if (!deviceSkin.frameImage) {
     // No frame skin: draw a rounded, padded block at the device's aspect ratio and
@@ -30,7 +34,15 @@ export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({ deviceSkin, scr
     // immediately instead of a bare spinner in empty space.
     const hasSize = screenSize.width > 0 && screenSize.height > 0;
     return (
-      <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          position: 'relative',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <div
           style={{
             height: '100%',
@@ -88,7 +100,14 @@ export const DeviceSkinComponent: React.FC<DeviceSkinProps> = ({ deviceSkin, scr
         src={frameImage}
         alt=""
         draggable={false}
-        style={{ ...frameImageStyle, position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 2 }}
+        style={{
+          ...frameImageStyle,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
       />
     </div>
   );

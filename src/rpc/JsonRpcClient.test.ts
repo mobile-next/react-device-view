@@ -3,8 +3,9 @@ import { formatJsonRpcError } from './JsonRpcClient';
 
 describe('formatJsonRpcError', () => {
   it('appends string data to the message', () => {
-    expect(formatJsonRpcError({ message: 'Streaming error', data: 'no decodable video within 10s' }))
-      .toBe('Streaming error: no decodable video within 10s');
+    expect(formatJsonRpcError({ message: 'Streaming error', data: 'no decodable video within 10s' })).toBe(
+      'Streaming error: no decodable video within 10s',
+    );
   });
 
   it('returns just the message when data is absent', () => {

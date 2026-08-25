@@ -2,11 +2,7 @@
 export { DeviceView } from './DeviceView';
 
 // Types
-export {
-  DevicePlatform,
-  DeviceType,
-  ConnectionError,
-} from './types';
+export { DevicePlatform, DeviceType, ConnectionError } from './types';
 
 export type {
   DeviceViewProps,

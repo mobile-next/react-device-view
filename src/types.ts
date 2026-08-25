@@ -1,12 +1,12 @@
 export enum DevicePlatform {
-  IOS = "ios",
-  ANDROID = "android",
+  IOS = 'ios',
+  ANDROID = 'android',
 }
 
 export enum DeviceType {
-  REAL = "real",
-  EMULATOR = "emulator",
-  SIMULATOR = "simulator",
+  REAL = 'real',
+  EMULATOR = 'emulator',
+  SIMULATOR = 'simulator',
 }
 
 export interface DeviceDescriptor {
@@ -16,7 +16,7 @@ export interface DeviceDescriptor {
   platform: DevicePlatform;
   type: DeviceType;
   version?: string;
-  state?: "online" | "offline";
+  state?: 'online' | 'offline';
 }
 
 export interface ScreenSize {
