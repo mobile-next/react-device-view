@@ -19,3 +19,10 @@ describe('formatJsonRpcError', () => {
     expect(formatJsonRpcError({})).toBe('JSON-RPC error');
   });
 });
+
+describe('formatJsonRpcError when the server already folded data into message', () => {
+  it('does not repeat the detail', () => {
+    expect(formatJsonRpcError({ message: 'device.io.tap failed: busy', data: 'busy' }))
+      .toBe('device.io.tap failed: busy');
+  });
+});
