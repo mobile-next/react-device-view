@@ -1,6 +1,7 @@
 import React, { Ref, useRef, useState } from 'react';
 import { ScreenSize, GesturePoint, StreamRenderMode } from './types';
 import { BootScreen } from './BootScreen';
+import { toScreenCoords } from './screenCoords';
 
 export enum DeviceState {
   UNKNOWN = "UNKNOWN",
@@ -72,14 +73,8 @@ export const DeviceViewport: React.FC<{
   const [gestureState, setGestureState] = useState<GestureState>(emptyGestureState);
   const gestureRef = useRef<GestureState>(emptyGestureState);
 
-  const convertToScreenCoords = (clientX: number, clientY: number, element: HTMLCanvasElement | HTMLVideoElement) => {
-    const rect = element.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    const screenX = Math.floor((x / rect.width) * screenSize.width);
-    const screenY = Math.floor((y / rect.height) * screenSize.height);
-    return { x, y, screenX, screenY };
-  };
+  const convertToScreenCoords = (clientX: number, clientY: number, element: HTMLCanvasElement | HTMLVideoElement) =>
+    toScreenCoords(clientX, clientY, element.getBoundingClientRect(), screenSize);
 
   const updateGesture = (newState: GestureState) => {
     gestureRef.current = newState;
@@ -137,6 +132,16 @@ export const DeviceViewport: React.FC<{
     updateGesture(emptyGestureState);
   };
 
+  // Leaving the stream ends a drag, but a press that never moved is cancelled rather
+  // than turned into a tap on the edge pixel.
+  const handleMouseLeave = (e: React.MouseEvent<HTMLCanvasElement | HTMLVideoElement>) => {
+    if (!gestureRef.current.isGesturing) {
+      updateGesture(emptyGestureState);
+      return;
+    }
+    handleMouseUp(e);
+  };
+
   const streamStyle: React.CSSProperties = {
     cursor: 'crosshair',
     width: '100%',
@@ -187,7 +192,7 @@ export const DeviceViewport: React.FC<{
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
             />
           ) : (
             <canvas
@@ -196,7 +201,7 @@ export const DeviceViewport: React.FC<{
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
             />
           )}
 

@@ -60,6 +60,10 @@ export function formatJsonRpcError(error: { message?: string; data?: unknown }):
     return message;
   }
   const detail = typeof error.data === 'string' ? error.data : JSON.stringify(error.data);
+  // Some servers already fold the detail into message; don't print it twice.
+  if (message.includes(detail)) {
+    return message;
+  }
   return `${message}: ${detail}`;
 }
 

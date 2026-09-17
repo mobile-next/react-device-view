@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { DeviceDescriptor, ButtonType, GesturePoint } from '../types';
 import { DeviceClientApi } from '../rpc/DeviceClient';
+import { createSerialQueue } from './serialQueue';
 
 interface UseDeviceInteractionOptions {
   deviceClient: DeviceClientApi;
@@ -10,10 +11,9 @@ interface UseDeviceInteractionOptions {
 export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDeviceInteractionOptions) {
   const pendingKeys = useRef("");
   const isFlushingKeys = useRef(false);
+  const runInput = useRef(createSerialQueue()).current;
 
-  const handleTap = async (x: number, y: number) => {
-    await deviceClient.tap(x, y);
-  };
+  const handleTap = (x: number, y: number) => runInput(() => deviceClient.tap(x, y));
 
   const pointerDown = () => ({ type: "pointerDown", button: 0 });
   const pointerMove = (x: number, y: number, duration: number) => ({ type: "pointerMove", duration, x, y });
@@ -32,7 +32,7 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
       }
 
       actions.push(pointerUp());
-      await deviceClient.gesture(actions);
+      await runInput(() => deviceClient.gesture(actions));
     }
   };
 
