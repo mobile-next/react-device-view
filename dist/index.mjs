@@ -347,6 +347,16 @@ var DeviceControls = ({
     onOpenUrl && /* @__PURE__ */ jsx(ControlButton, { onClick: onOpenUrl, icon: /* @__PURE__ */ jsx(LinkIcon, {}), text: "Open URL" })
   ] });
 };
+
+// src/screenCoords.ts
+var clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+function toScreenCoords(clientX, clientY, rect, screenSize) {
+  const x = clamp(clientX - rect.left, 0, rect.width);
+  const y = clamp(clientY - rect.top, 0, rect.height);
+  const screenX = clamp(Math.floor(x / rect.width * screenSize.width), 0, screenSize.width - 1);
+  const screenY = clamp(Math.floor(y / rect.height * screenSize.height), 0, screenSize.height - 1);
+  return { x, y, screenX, screenY };
+}
 var DeviceState = /* @__PURE__ */ ((DeviceState3) => {
   DeviceState3["UNKNOWN"] = "UNKNOWN";
   DeviceState3["BOOTING"] = "BOOTING";
@@ -389,14 +399,7 @@ var DeviceViewport = ({
   const [clicks, setClicks] = useState([]);
   const [gestureState, setGestureState] = useState(emptyGestureState);
   const gestureRef = useRef(emptyGestureState);
-  const convertToScreenCoords = (clientX, clientY, element) => {
-    const rect = element.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    const screenX = Math.floor(x / rect.width * screenSize.width);
-    const screenY = Math.floor(y / rect.height * screenSize.height);
-    return { x, y, screenX, screenY };
-  };
+  const convertToScreenCoords = (clientX, clientY, element) => toScreenCoords(clientX, clientY, element.getBoundingClientRect(), screenSize);
   const updateGesture = (newState) => {
     gestureRef.current = newState;
     setGestureState(newState);
@@ -448,6 +451,13 @@ var DeviceViewport = ({
     }
     updateGesture(emptyGestureState);
   };
+  const handleMouseLeave = (e) => {
+    if (!gestureRef.current.isGesturing) {
+      updateGesture(emptyGestureState);
+      return;
+    }
+    handleMouseUp(e);
+  };
   const streamStyle = {
     cursor: "crosshair",
     width: "100%",
@@ -486,7 +496,7 @@ var DeviceViewport = ({
           onMouseDown: handleMouseDown,
           onMouseMove: handleMouseMove,
           onMouseUp: handleMouseUp,
-          onMouseLeave: handleMouseUp
+          onMouseLeave: handleMouseLeave
         }
       ) : /* @__PURE__ */ jsx(
         "canvas",
@@ -496,7 +506,7 @@ var DeviceViewport = ({
           onMouseDown: handleMouseDown,
           onMouseMove: handleMouseMove,
           onMouseUp: handleMouseUp,
-          onMouseLeave: handleMouseUp
+          onMouseLeave: handleMouseLeave
         }
       ),
       clicks.map((click) => /* @__PURE__ */ jsx(
@@ -717,6 +727,9 @@ function formatJsonRpcError(error) {
     return message;
   }
   const detail = typeof error.data === "string" ? error.data : JSON.stringify(error.data);
+  if (message.includes(detail)) {
+    return message;
+  }
   return `${message}: ${detail}`;
 }
 var CONNECTION_TIMEOUT_MS = 1e4;
@@ -1656,12 +1669,23 @@ var WebRtcStream = class {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 };
+
+// src/hooks/serialQueue.ts
+function createSerialQueue() {
+  let tail = Promise.resolve();
+  return (task) => {
+    const result = tail.then(task);
+    tail = result.catch(() => void 0);
+    return result;
+  };
+}
+
+// src/hooks/useDeviceInteraction.ts
 function useDeviceInteraction({ deviceClient, selectedDevice }) {
   const pendingKeys = useRef("");
   const isFlushingKeys = useRef(false);
-  const handleTap = async (x, y) => {
-    await deviceClient.tap(x, y);
-  };
+  const runInput = useRef(createSerialQueue()).current;
+  const handleTap = (x, y) => runInput(() => deviceClient.tap(x, y));
   const pointerDown = () => ({ type: "pointerDown", button: 0 });
   const pointerMove = (x, y, duration) => ({ type: "pointerMove", duration, x, y });
   const pointerUp = () => ({ type: "pointerUp", button: 0 });
@@ -1675,7 +1699,7 @@ function useDeviceInteraction({ deviceClient, selectedDevice }) {
         actions.push(pointerMove(points[i].x, points[i].y, Math.max(duration, 0)));
       }
       actions.push(pointerUp());
-      await deviceClient.gesture(actions);
+      await runInput(() => deviceClient.gesture(actions));
     }
   };
   const flushPendingKeys = async () => {
