@@ -28,7 +28,6 @@ export const BootingDeviceView: React.FC<BootingDeviceViewProps> = ({ platform, 
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'visible',
-      backgroundColor: '#202224',
       paddingTop: '24px',
       paddingBottom: '24px',
     }}

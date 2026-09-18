@@ -42,7 +42,7 @@ export type { NinePatchSkin } from './NinePatchSkin';
 export { iosNinePatchSkin } from './skins/iosNinePatch';
 export { androidNinePatchSkin } from './skins/androidNinePatch';
 export { BootScreen } from './BootScreen';
-export type { BootScreenProps } from './BootScreen';
+export type { BootScreenProps, BootPhase } from './BootScreen';
 export { BootingDeviceView } from './BootingDeviceView';
 export type { BootingDeviceViewProps } from './BootingDeviceView';
 
