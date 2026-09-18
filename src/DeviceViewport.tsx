@@ -170,7 +170,7 @@ export const DeviceViewport: React.FC<{
           stream can decode underneath and the reveal is seamless on first frame. */}
       {isBooting && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 20 }}>
-          <BootScreen platform={platform ?? 'ios'} />
+          <BootScreen platform={platform ?? 'ios'} phase="connecting" />
         </div>
       )}
 

@@ -82,7 +82,6 @@ export const DeviceInstance = forwardRef<DeviceStreamHandle, DeviceStreamProps>(
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'visible',
-        backgroundColor: '#202224',
         paddingTop: '24px',
         paddingBottom: '24px',
         outline: 'none',

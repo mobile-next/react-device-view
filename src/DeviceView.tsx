@@ -29,7 +29,7 @@ function isWebRtcResponse(response: unknown): response is WebRtcScreencaptureRes
 const Spinner: React.FC<{ message?: string }> = ({ message }) => (
   <div style={{
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    width: '100%', height: '100%', backgroundColor: '#202224', color: '#888'
+    width: '100%', height: '100%', color: '#888'
   }}>
     <div style={{ textAlign: 'center' }}>
       <div style={{
