@@ -6,11 +6,11 @@ import { ANDROID_BOOT_GIF, IOS_BOOT_LOGO } from './skins/bootAssets';
 export type BootPhase = 'allocating' | 'connecting';
 
 // The boot animation plays alone first; the progress bar appears after this.
-const PROGRESS_DELAY_SECONDS = 10;
+const PROGRESS_DELAY_SECONDS = 4;
 const PROGRESS_REVEAL_SECONDS = 0.3;
 
 // How long the fake progress bar takes to fill once it appears. With the delay,
-// android totals ~40s and ios ~150s, matching typical provisioning times.
+// android totals ~34s and ios ~144s, matching typical provisioning times.
 const PROGRESS_FILL_SECONDS = { android: 30, ios: 140 };
 
 const CONNECTING_MESSAGE = 'Starting video stream';

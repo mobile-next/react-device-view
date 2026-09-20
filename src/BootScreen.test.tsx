@@ -29,12 +29,12 @@ describe('boot screen assets', () => {
 });
 
 describe('boot screen phases', () => {
-  it('android progress bar waits 10s, then fills over 30s', () => {
-    expect(progressBarTiming(bootScreenMarkup('android', 'allocating'))).toBe('30s linear 10s');
+  it('android progress bar waits 4s, then fills over 30s', () => {
+    expect(progressBarTiming(bootScreenMarkup('android', 'allocating'))).toBe('30s linear 4s');
   });
 
-  it('ios progress bar waits 10s, then fills over 140s', () => {
-    expect(progressBarTiming(bootScreenMarkup('ios', 'allocating'))).toBe('140s linear 10s');
+  it('ios progress bar waits 4s, then fills over 140s', () => {
+    expect(progressBarTiming(bootScreenMarkup('ios', 'allocating'))).toBe('140s linear 4s');
   });
 
   it('connecting shows text instead of a progress bar', () => {
