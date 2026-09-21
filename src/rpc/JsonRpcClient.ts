@@ -1,4 +1,4 @@
-import { ConnectionError } from '../types';
+import { ConnectionError, RequestCancelledError } from '../types';
 
 interface Logger {
   info(message: string): void;
@@ -305,13 +305,12 @@ export class JsonRpcClient {
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         this.logger.error('max reconnect attempts reached');
         this.wsState = ConnectionState.FAILED;
-        this.failAllPendingRequests();
+        this.failAllPendingRequests(new Error('WebSocket connection failed, please retry'));
       }
     }
   }
 
-  private failAllPendingRequests(): void {
-    const error = new Error('WebSocket connection failed, please retry');
+  private failAllPendingRequests(error: Error): void {
     this.pendingRequests.forEach(pending => {
       if (pending.timeoutId) {
         clearTimeout(pending.timeoutId);
@@ -387,7 +386,8 @@ export class JsonRpcClient {
     }
 
     this.wsState = ConnectionState.DISCONNECTED;
-    this.failAllPendingRequests();
+    // teardown is not a transport failure, so callers can tell them apart
+    this.failAllPendingRequests(new RequestCancelledError());
     this.messageQueue = [];
   }
 }

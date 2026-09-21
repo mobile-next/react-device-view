@@ -6,6 +6,7 @@ export {
   DevicePlatform,
   DeviceType,
   ConnectionError,
+  RequestCancelledError,
 } from './types';
 
 export type {
