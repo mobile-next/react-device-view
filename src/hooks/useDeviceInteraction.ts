@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { DeviceDescriptor, ButtonType, GesturePoint } from '../types';
+import { DeviceDescriptor, ButtonType, GesturePoint, RequestCancelledError } from '../types';
 import { DeviceClientApi } from '../rpc/DeviceClient';
 import { createSerialQueue } from './serialQueue';
 
@@ -13,7 +13,14 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
   const isFlushingKeys = useRef(false);
   const runInput = useRef(createSerialQueue()).current;
 
-  const handleTap = (x: number, y: number) => runInput(() => deviceClient.tap(x, y));
+  // input in flight when the viewer unmounts is cancelled, which is not an error
+  const ignoreCancelled = (error: unknown) => {
+    if (!(error instanceof RequestCancelledError)) {
+      throw error;
+    }
+  };
+
+  const handleTap = (x: number, y: number) => runInput(() => deviceClient.tap(x, y)).catch(ignoreCancelled);
 
   const pointerDown = () => ({ type: "pointerDown", button: 0 });
   const pointerMove = (x: number, y: number, duration: number) => ({ type: "pointerMove", duration, x, y });
@@ -32,7 +39,7 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
       }
 
       actions.push(pointerUp());
-      await runInput(() => deviceClient.gesture(actions));
+      await runInput(() => deviceClient.gesture(actions)).catch(ignoreCancelled);
     }
   };
 

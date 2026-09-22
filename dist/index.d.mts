@@ -53,6 +53,9 @@ declare class ConnectionError extends Error {
     readonly isConnectionError = true;
     constructor(message: string);
 }
+declare class RequestCancelledError extends Error {
+    constructor();
+}
 interface DeviceViewProps {
     serverUrl: string;
     token: string;
@@ -402,4 +405,4 @@ interface DeviceControlsProps {
 }
 declare const DeviceControls: React.FC<DeviceControlsProps>;
 
-export { AvcStream, type BootPhase, BootScreen, type BootScreenProps, BootingDeviceView, type BootingDeviceViewProps, type ButtonType, ConnectionError, DeviceClient, type DeviceClientApi, DeviceControls, type DeviceDescriptor, type DeviceInfo, type DeviceInfoResponse, DeviceInstance, DevicePlatform, type DeviceSkin, DeviceState, type DeviceStreamHandle, type DeviceStreamProps, DeviceType, DeviceView, type DeviceViewHandle, type DeviceViewProps, DeviceViewport, type GesturePoint, JsonRpcClient, MjpegStream, type NinePatchSkin, NinePatchSkinView, NoDeviceSkin, type ScreenCaptureFormat, type ScreenSize, type ScreencaptureResponse, type ScreenshotResponse, type StreamRenderMode, type WebRtcSessionInfo, WebRtcStream, type WebRtcStreamOptions, androidNinePatchSkin, createNoOpDeviceClient, getDeviceSkinForDevice, iosNinePatchSkin, mapButtonTop, nativeFrameSize, nativeScreenSlot };
+export { AvcStream, type BootPhase, BootScreen, type BootScreenProps, BootingDeviceView, type BootingDeviceViewProps, type ButtonType, ConnectionError, DeviceClient, type DeviceClientApi, DeviceControls, type DeviceDescriptor, type DeviceInfo, type DeviceInfoResponse, DeviceInstance, DevicePlatform, type DeviceSkin, DeviceState, type DeviceStreamHandle, type DeviceStreamProps, DeviceType, DeviceView, type DeviceViewHandle, type DeviceViewProps, DeviceViewport, type GesturePoint, JsonRpcClient, MjpegStream, type NinePatchSkin, NinePatchSkinView, NoDeviceSkin, RequestCancelledError, type ScreenCaptureFormat, type ScreenSize, type ScreencaptureResponse, type ScreenshotResponse, type StreamRenderMode, type WebRtcSessionInfo, WebRtcStream, type WebRtcStreamOptions, androidNinePatchSkin, createNoOpDeviceClient, getDeviceSkinForDevice, iosNinePatchSkin, mapButtonTop, nativeFrameSize, nativeScreenSlot };

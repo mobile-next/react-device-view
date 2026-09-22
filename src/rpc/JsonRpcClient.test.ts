@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { formatJsonRpcError } from './JsonRpcClient';
+import { describe, it, expect, vi } from 'vitest';
+import { formatJsonRpcError, JsonRpcClient } from './JsonRpcClient';
+import { RequestCancelledError } from '../types';
 
 describe('formatJsonRpcError', () => {
   it('appends string data to the message', () => {
@@ -24,5 +25,36 @@ describe('formatJsonRpcError when the server already folded data into message', 
   it('does not repeat the detail', () => {
     expect(formatJsonRpcError({ message: 'device.io.tap failed: busy', data: 'busy' }))
       .toBe('device.io.tap failed: busy');
+  });
+});
+
+class FakeWebSocket {
+  onopen: (() => void) | null = null;
+  onmessage: unknown = null;
+  onerror: unknown = null;
+  onclose: unknown = null;
+
+  constructor() {
+    setTimeout(() => this.onopen?.(), 0);
+  }
+
+  send() {}
+  close() {}
+}
+
+const socketToOpen = () => new Promise(resolve => setTimeout(resolve, 10));
+
+describe('JsonRpcClient.disconnect', () => {
+  it('rejects pending requests with RequestCancelledError', async () => {
+    vi.stubGlobal('WebSocket', FakeWebSocket);
+    const client = new JsonRpcClient('ws://localhost:1', undefined, 'token');
+    const request = client.sendJsonRpcRequest('device.tap', {});
+    const rejection = expect(request).rejects.toBeInstanceOf(RequestCancelledError);
+
+    await socketToOpen();
+    client.disconnect();
+
+    await rejection;
+    vi.unstubAllGlobals();
   });
 });

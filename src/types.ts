@@ -64,6 +64,15 @@ export class ConnectionError extends Error {
   }
 }
 
+// A request abandoned because the client was torn down, not because the
+// connection broke. Expected on unmount; callers may ignore it.
+export class RequestCancelledError extends Error {
+  constructor() {
+    super('request cancelled, client disconnected');
+    this.name = 'RequestCancelledError';
+  }
+}
+
 export interface DeviceViewProps {
   serverUrl: string;
   token: string;
