@@ -201,6 +201,7 @@ declare class JsonRpcClient {
     private reconnectAttempts;
     private isReconnecting;
     private isClosedByCaller;
+    private hasGivenUp;
     private messageQueue;
     private connectionListeners;
     private logger;

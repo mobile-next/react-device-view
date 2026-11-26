@@ -88,7 +88,9 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   };
 
   const getOrCreateClient = (): JsonRpcClient => {
-    if (!jsonRpcClientRef.current || jsonRpcClientRef.current.isDisconnected) {
+    // A client that gave up reconnecting retries on its next request, so it is kept: replacing it
+    // would drop its reconnect handler and leak it past the effect's cleanup.
+    if (!jsonRpcClientRef.current) {
       jsonRpcClientRef.current = new JsonRpcClient(serverUrl, undefined, token);
     }
     return jsonRpcClientRef.current;
@@ -213,12 +215,16 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
     return `${protocol}//${url.host}`;
   };
 
-  const startStream = async (devId: string, format: ScreenCaptureFormat) => {
+  // isRestart: the stream comes back after a dropped connection; the device did not reboot, so
+  // the fake boot screen stays off.
+  const startStream = async (devId: string, format: ScreenCaptureFormat, isRestart = false) => {
     const generation = streamGenerationRef.current;
 
     try {
-      firstFrameSeenRef.current = false;
-      setIsBooting(true);
+      if (!isRestart) {
+        firstFrameSeenRef.current = false;
+        setIsBooting(true);
+      }
       setDeviceState(DeviceState.CONNECTING);
 
       const scale = format === 'avc' ? 0.5 : undefined;
@@ -344,7 +350,7 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
       if (event === 'reconnected' && format) {
         stopStream();
         streamingDeviceIdRef.current = deviceId;
-        startStream(deviceId, format);
+        startStream(deviceId, format, true);
       }
       if (event === 'failed') {
         onError?.(new ConnectionError('Connection lost. Tap the device to retry.'));

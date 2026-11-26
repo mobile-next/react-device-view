@@ -86,6 +86,8 @@ export class JsonRpcClient {
   private reconnectAttempts = 0;
   private isReconnecting = false;
   private isClosedByCaller = false;
+  // Set when reconnect() gave up; the next request reconnects and reports it as 'reconnected'.
+  private hasGivenUp = false;
   private messageQueue: Array<{ method: string; params: any; id: number }> = [];
   private connectionListeners: Array<(state: ConnectionState) => void> = [];
   private logger: Logger;
@@ -170,6 +172,10 @@ export class JsonRpcClient {
 
       this.attachWebSocketHandlers();
       await this.waitForConnection();
+      if (this.hasGivenUp) {
+        this.hasGivenUp = false;
+        this.onReconnectEvent?.('reconnected');
+      }
     } catch {
       this.wsState = ConnectionState.FAILED;
       this.ws = null;
@@ -329,6 +335,7 @@ export class JsonRpcClient {
 
     this.logger.error('max reconnect attempts reached');
     this.isReconnecting = false;
+    this.hasGivenUp = true;
     this.wsState = ConnectionState.FAILED;
     this.messageQueue = [];
     this.failAllPendingRequests(new ConnectionError('websocket connection lost'));
