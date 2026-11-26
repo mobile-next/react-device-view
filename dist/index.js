@@ -785,6 +785,8 @@ var JsonRpcClient = class {
   reconnectAttempts = 0;
   isReconnecting = false;
   isClosedByCaller = false;
+  // Set when reconnect() gave up; the next request reconnects and reports it as 'reconnected'.
+  hasGivenUp = false;
   messageQueue = [];
   connectionListeners = [];
   logger;
@@ -844,6 +846,10 @@ var JsonRpcClient = class {
       this.ws = new WebSocket(this.getWebSocketUrl());
       this.attachWebSocketHandlers();
       await this.waitForConnection();
+      if (this.hasGivenUp) {
+        this.hasGivenUp = false;
+        this.onReconnectEvent?.("reconnected");
+      }
     } catch {
       this.wsState = "failed" /* FAILED */;
       this.ws = null;
@@ -975,6 +981,7 @@ var JsonRpcClient = class {
     }
     this.logger.error("max reconnect attempts reached");
     this.isReconnecting = false;
+    this.hasGivenUp = true;
     this.wsState = "failed" /* FAILED */;
     this.messageQueue = [];
     this.failAllPendingRequests(new ConnectionError("websocket connection lost"));
@@ -1972,7 +1979,7 @@ var DeviceView = react.forwardRef(({
     onFirstFrame?.();
   };
   const getOrCreateClient = () => {
-    if (!jsonRpcClientRef.current || jsonRpcClientRef.current.isDisconnected) {
+    if (!jsonRpcClientRef.current) {
       jsonRpcClientRef.current = new JsonRpcClient(serverUrl, void 0, token);
     }
     return jsonRpcClientRef.current;
@@ -2090,11 +2097,13 @@ var DeviceView = react.forwardRef(({
     const protocol = url.protocol === "wss:" ? "https:" : "http:";
     return `${protocol}//${url.host}`;
   };
-  const startStream = async (devId, format) => {
+  const startStream = async (devId, format, isRestart = false) => {
     const generation = streamGenerationRef.current;
     try {
-      firstFrameSeenRef.current = false;
-      setIsBooting(true);
+      if (!isRestart) {
+        firstFrameSeenRef.current = false;
+        setIsBooting(true);
+      }
       setDeviceState("CONNECTING" /* CONNECTING */);
       const scale = format === "avc" ? 0.5 : void 0;
       const client = getDeviceClient();
@@ -2196,11 +2205,22 @@ var DeviceView = react.forwardRef(({
     stopStream();
     const rpcClient = new JsonRpcClient(serverUrl, void 0, token);
     jsonRpcClientRef.current = rpcClient;
+    let format = null;
     rpcClient.onReconnectEvent = (event) => {
-      if (cancelled) return;
-      if (event === "reconnecting") onError?.(new ConnectionError("Connection lost, reconnecting..."));
-      if (event === "reconnected") onConnected?.();
-      if (event === "failed") onError?.(new ConnectionError("Connection lost. Tap the device to retry."));
+      if (cancelled) {
+        return;
+      }
+      if (event === "reconnecting") {
+        onError?.(new ConnectionError("Connection lost, reconnecting..."));
+      }
+      if (event === "reconnected" && format) {
+        stopStream();
+        streamingDeviceIdRef.current = deviceId;
+        startStream(deviceId, format, true);
+      }
+      if (event === "failed") {
+        onError?.(new ConnectionError("Connection lost. Tap the device to retry."));
+      }
     };
     streamingDeviceIdRef.current = deviceId;
     const client = new DeviceClient(rpcClient, deviceId);
@@ -2216,14 +2236,11 @@ var DeviceView = react.forwardRef(({
       };
       setSelectedDevice(descriptor);
       setDeviceSkin(getDeviceSkinForDevice(descriptor));
-      let format = "mjpeg";
-      if (descriptor.platform === "android" /* ANDROID */) {
-        format = "avc";
-      } else if (descriptor.platform === "ios" /* IOS */ && descriptor.type === "real" /* REAL */) {
-        format = "avc";
-      }
+      const isAvc = descriptor.platform === "android" /* ANDROID */ || descriptor.platform === "ios" /* IOS */ && descriptor.type === "real" /* REAL */;
+      const streamFormat = isAvc ? "avc" : "mjpeg";
+      format = streamFormat;
       if (!cancelled) {
-        startStream(deviceId, format);
+        startStream(deviceId, streamFormat);
       }
     }).catch((error) => {
       if (cancelled) return;

@@ -88,7 +88,9 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
   };
 
   const getOrCreateClient = (): JsonRpcClient => {
-    if (!jsonRpcClientRef.current || jsonRpcClientRef.current.isDisconnected) {
+    // A client that gave up reconnecting retries on its next request, so it is kept: replacing it
+    // would drop its reconnect handler and leak it past the effect's cleanup.
+    if (!jsonRpcClientRef.current) {
       jsonRpcClientRef.current = new JsonRpcClient(serverUrl, undefined, token);
     }
     return jsonRpcClientRef.current;
@@ -213,12 +215,16 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
     return `${protocol}//${url.host}`;
   };
 
-  const startStream = async (devId: string, format: ScreenCaptureFormat) => {
+  // isRestart: the stream comes back after a dropped connection; the device did not reboot, so
+  // the fake boot screen stays off.
+  const startStream = async (devId: string, format: ScreenCaptureFormat, isRestart = false) => {
     const generation = streamGenerationRef.current;
 
     try {
-      firstFrameSeenRef.current = false;
-      setIsBooting(true);
+      if (!isRestart) {
+        firstFrameSeenRef.current = false;
+        setIsBooting(true);
+      }
       setDeviceState(DeviceState.CONNECTING);
 
       const scale = format === 'avc' ? 0.5 : undefined;
@@ -328,12 +334,27 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
     const rpcClient = new JsonRpcClient(serverUrl, undefined, token);
     jsonRpcClientRef.current = rpcClient;
 
+    // Set once device info arrives; a reconnect before that has no stream to restart.
+    let format: ScreenCaptureFormat | null = null;
+
     // The control socket dropped: tell the host, so it can say so instead of showing dead controls.
+    // The screen capture session died with the socket, so a reconnect starts a new stream;
+    // onConnected fires when its first track or frame arrives, not when the socket is back.
     rpcClient.onReconnectEvent = (event: ReconnectEvent) => {
-      if (cancelled) return;
-      if (event === 'reconnecting') onError?.(new ConnectionError('Connection lost, reconnecting...'));
-      if (event === 'reconnected') onConnected?.();
-      if (event === 'failed') onError?.(new ConnectionError('Connection lost. Tap the device to retry.'));
+      if (cancelled) {
+        return;
+      }
+      if (event === 'reconnecting') {
+        onError?.(new ConnectionError('Connection lost, reconnecting...'));
+      }
+      if (event === 'reconnected' && format) {
+        stopStream();
+        streamingDeviceIdRef.current = deviceId;
+        startStream(deviceId, format, true);
+      }
+      if (event === 'failed') {
+        onError?.(new ConnectionError('Connection lost. Tap the device to retry.'));
+      }
     };
     streamingDeviceIdRef.current = deviceId;
 
@@ -355,15 +376,13 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
       setSelectedDevice(descriptor);
       setDeviceSkin(getDeviceSkinForDevice(descriptor));
 
-      let format: ScreenCaptureFormat = 'mjpeg';
-      if (descriptor.platform === DevicePlatform.ANDROID) {
-        format = 'avc';
-      } else if (descriptor.platform === DevicePlatform.IOS && descriptor.type === DeviceType.REAL) {
-        format = 'avc';
-      }
+      const isAvc = descriptor.platform === DevicePlatform.ANDROID
+        || (descriptor.platform === DevicePlatform.IOS && descriptor.type === DeviceType.REAL);
+      const streamFormat: ScreenCaptureFormat = isAvc ? 'avc' : 'mjpeg';
+      format = streamFormat;
 
       if (!cancelled) {
-        startStream(deviceId, format);
+        startStream(deviceId, streamFormat);
       }
     }).catch((error) => {
       if (cancelled) return;

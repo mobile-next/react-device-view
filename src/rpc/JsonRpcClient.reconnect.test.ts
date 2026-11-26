@@ -89,6 +89,22 @@ describe('JsonRpcClient reconnect', () => {
     expect(events).toEqual(['reconnecting', 'failed']);
   });
 
+  it('reconnects on the next request after giving up, and says so', async () => {
+    const events: ReconnectEvent[] = [];
+    const client = connectedClient(events);
+    await waitSeconds(0.1);
+    FakeSocket.isServerDown = true;
+    dropConnection();
+    await waitSeconds(60);
+
+    FakeSocket.isServerDown = false;
+    void client.sendJsonRpcRequest('device.io.tap', {});
+    await waitSeconds(1);
+
+    expect(events).toEqual(['reconnecting', 'failed', 'reconnected']);
+    expect(latestSocket().sent.join()).toContain('device.io.tap');
+  });
+
   it('does not reconnect after disconnect()', async () => {
     const events: ReconnectEvent[] = [];
     const client = connectedClient(events);
