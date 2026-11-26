@@ -2194,11 +2194,22 @@ var DeviceView = forwardRef(({
     stopStream();
     const rpcClient = new JsonRpcClient(serverUrl, void 0, token);
     jsonRpcClientRef.current = rpcClient;
+    let format = null;
     rpcClient.onReconnectEvent = (event) => {
-      if (cancelled) return;
-      if (event === "reconnecting") onError?.(new ConnectionError("Connection lost, reconnecting..."));
-      if (event === "reconnected") onConnected?.();
-      if (event === "failed") onError?.(new ConnectionError("Connection lost. Tap the device to retry."));
+      if (cancelled) {
+        return;
+      }
+      if (event === "reconnecting") {
+        onError?.(new ConnectionError("Connection lost, reconnecting..."));
+      }
+      if (event === "reconnected" && format) {
+        stopStream();
+        streamingDeviceIdRef.current = deviceId;
+        startStream(deviceId, format);
+      }
+      if (event === "failed") {
+        onError?.(new ConnectionError("Connection lost. Tap the device to retry."));
+      }
     };
     streamingDeviceIdRef.current = deviceId;
     const client = new DeviceClient(rpcClient, deviceId);
@@ -2214,14 +2225,11 @@ var DeviceView = forwardRef(({
       };
       setSelectedDevice(descriptor);
       setDeviceSkin(getDeviceSkinForDevice(descriptor));
-      let format = "mjpeg";
-      if (descriptor.platform === "android" /* ANDROID */) {
-        format = "avc";
-      } else if (descriptor.platform === "ios" /* IOS */ && descriptor.type === "real" /* REAL */) {
-        format = "avc";
-      }
+      const isAvc = descriptor.platform === "android" /* ANDROID */ || descriptor.platform === "ios" /* IOS */ && descriptor.type === "real" /* REAL */;
+      const streamFormat = isAvc ? "avc" : "mjpeg";
+      format = streamFormat;
       if (!cancelled) {
-        startStream(deviceId, format);
+        startStream(deviceId, streamFormat);
       }
     }).catch((error) => {
       if (cancelled) return;
