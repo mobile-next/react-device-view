@@ -6,18 +6,22 @@ import { createSerialQueue } from './serialQueue';
 interface UseDeviceInteractionOptions {
   deviceClient: DeviceClientApi;
   selectedDevice: DeviceDescriptor | null;
+  // Input the device refused (released device, lost connection). Without it the failure was an
+  // uncaught rejection and the controls looked dead.
+  onError?: (error: Error) => void;
 }
 
-export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDeviceInteractionOptions) {
+export function useDeviceInteraction({ deviceClient, selectedDevice, onError }: UseDeviceInteractionOptions) {
   const pendingKeys = useRef("");
   const isFlushingKeys = useRef(false);
   const runInput = useRef(createSerialQueue()).current;
 
   // input in flight when the viewer unmounts is cancelled, which is not an error
   const ignoreCancelled = (error: unknown) => {
-    if (!(error instanceof RequestCancelledError)) {
-      throw error;
+    if (error instanceof RequestCancelledError) {
+      return;
     }
+    onError?.(error instanceof Error ? error : new Error(String(error)));
   };
 
   const handleTap = (x: number, y: number) => runInput(() => deviceClient.tap(x, y)).catch(ignoreCancelled);
@@ -57,7 +61,7 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
     try {
       await deviceClient.inputText(keys, 3000);
     } catch (error) {
-      console.error('device-view: error flushing keys:', error);
+      ignoreCancelled(error);
     } finally {
       isFlushingKeys.current = false;
     }
@@ -84,9 +88,7 @@ export function useDeviceInteraction({ deviceClient, selectedDevice }: UseDevice
     setTimeout(() => flushPendingKeys(), 500);
   };
 
-  const logButtonError = (error: unknown) => {
-    console.error('device-view: error pressing button:', error);
-  };
+  const logButtonError = ignoreCancelled;
 
   const pressButton = async (button: ButtonType) => {
     await deviceClient.pressButton(button);

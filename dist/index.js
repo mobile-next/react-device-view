@@ -767,6 +767,8 @@ function formatJsonRpcError(error) {
   return `${message}: ${detail}`;
 }
 var CONNECTION_TIMEOUT_MS = 1e4;
+var MAX_RECONNECT_ATTEMPTS = 5;
+var RECONNECT_DELAY_MS = 1e3;
 var JsonRpcClient = class {
   constructor(url, logger, authToken) {
     this.url = url;
@@ -781,12 +783,13 @@ var JsonRpcClient = class {
   wsState = "disconnected" /* DISCONNECTED */;
   pendingRequests = /* @__PURE__ */ new Map();
   reconnectAttempts = 0;
-  maxReconnectAttempts = 0;
-  reconnectDelay = 1e3;
+  isReconnecting = false;
+  isClosedByCaller = false;
   messageQueue = [];
   connectionListeners = [];
   logger;
   sessionToken;
+  onReconnectEvent;
   async exchangeTokenForSession() {
     if (!this.authToken || this.authToken === "UNSET") {
       this.logger.warn("no auth token available for exchange");
@@ -944,25 +947,38 @@ var JsonRpcClient = class {
     } else {
       this.wsState = "disconnected" /* DISCONNECTED */;
       this.ws = null;
-      if (this.pendingRequests.size > 0 && this.reconnectAttempts < this.maxReconnectAttempts) {
-        this.attemptReconnect();
+      if (!this.isClosedByCaller && !this.isReconnecting) {
+        void this.reconnect();
       }
     }
   }
-  async attemptReconnect() {
-    this.reconnectAttempts++;
-    this.wsState = "reconnecting" /* RECONNECTING */;
-    this.logger.info(`attempting websocket reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-    await new Promise((resolve) => setTimeout(resolve, this.reconnectDelay * this.reconnectAttempts));
-    try {
-      await this.connectWebSocket();
-    } catch {
-      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        this.logger.error("max reconnect attempts reached");
-        this.wsState = "failed" /* FAILED */;
-        this.failAllPendingRequests(new Error("WebSocket connection failed, please retry"));
+  // Retries with a growing delay. Requests sent meanwhile wait in the queue and go out on the
+  // new socket; if every attempt fails they are rejected.
+  async reconnect() {
+    this.isReconnecting = true;
+    this.reconnectAttempts = 0;
+    this.onReconnectEvent?.("reconnecting");
+    while (this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      this.reconnectAttempts++;
+      this.logger.info(`attempting websocket reconnect (${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+      await new Promise((resolve) => setTimeout(resolve, RECONNECT_DELAY_MS * this.reconnectAttempts));
+      if (this.isClosedByCaller) {
+        return;
+      }
+      try {
+        await this.connectWebSocket();
+        this.isReconnecting = false;
+        this.onReconnectEvent?.("reconnected");
+        return;
+      } catch {
       }
     }
+    this.logger.error("max reconnect attempts reached");
+    this.isReconnecting = false;
+    this.wsState = "failed" /* FAILED */;
+    this.messageQueue = [];
+    this.failAllPendingRequests(new ConnectionError("websocket connection lost"));
+    this.onReconnectEvent?.("failed");
   }
   failAllPendingRequests(error) {
     this.pendingRequests.forEach((pending) => {
@@ -987,7 +1003,9 @@ var JsonRpcClient = class {
     }
   }
   async sendViaWebSocket(method, params, timeoutMs) {
-    await this.connectWebSocket();
+    if (!this.isReconnecting) {
+      await this.connectWebSocket();
+    }
     const id = this.idCounter++;
     return new Promise((resolve, reject) => {
       let timeoutId;
@@ -1020,10 +1038,16 @@ var JsonRpcClient = class {
     return this.sendViaWebSocket(method, params, timeoutMs);
   };
   get isDisconnected() {
+    if (this.isReconnecting) {
+      return false;
+    }
     return this.wsState === "disconnected" /* DISCONNECTED */ || this.wsState === "failed" /* FAILED */;
   }
   disconnect() {
+    this.isClosedByCaller = true;
+    this.isReconnecting = false;
     if (this.ws) {
+      this.ws.onclose = null;
       this.ws.close();
       this.ws = null;
     }
@@ -1714,14 +1738,15 @@ function createSerialQueue() {
 }
 
 // src/hooks/useDeviceInteraction.ts
-function useDeviceInteraction({ deviceClient, selectedDevice }) {
+function useDeviceInteraction({ deviceClient, selectedDevice, onError }) {
   const pendingKeys = react.useRef("");
   const isFlushingKeys = react.useRef(false);
   const runInput = react.useRef(createSerialQueue()).current;
   const ignoreCancelled = (error) => {
-    if (!(error instanceof RequestCancelledError)) {
-      throw error;
+    if (error instanceof RequestCancelledError) {
+      return;
     }
+    onError?.(error instanceof Error ? error : new Error(String(error)));
   };
   const handleTap = (x, y) => runInput(() => deviceClient.tap(x, y)).catch(ignoreCancelled);
   const pointerDown = () => ({ type: "pointerDown", button: 0 });
@@ -1752,7 +1777,7 @@ function useDeviceInteraction({ deviceClient, selectedDevice }) {
     try {
       await deviceClient.inputText(keys, 3e3);
     } catch (error) {
-      console.error("device-view: error flushing keys:", error);
+      ignoreCancelled(error);
     } finally {
       isFlushingKeys.current = false;
     }
@@ -1775,9 +1800,7 @@ function useDeviceInteraction({ deviceClient, selectedDevice }) {
     pendingKeys.current += text;
     setTimeout(() => flushPendingKeys(), 500);
   };
-  const logButtonError = (error) => {
-    console.error("device-view: error pressing button:", error);
-  };
+  const logButtonError = ignoreCancelled;
   const pressButton = async (button) => {
     await deviceClient.pressButton(button);
   };
@@ -1971,7 +1994,8 @@ var DeviceView = react.forwardRef(({
     onTakeScreenshot
   } = useDeviceInteraction({
     selectedDevice,
-    deviceClient: getDeviceClient()
+    deviceClient: getDeviceClient(),
+    onError
   });
   react.useImperativeHandle(ref, () => ({
     takeScreenshot: onTakeScreenshot,
@@ -2172,6 +2196,12 @@ var DeviceView = react.forwardRef(({
     stopStream();
     const rpcClient = new JsonRpcClient(serverUrl, void 0, token);
     jsonRpcClientRef.current = rpcClient;
+    rpcClient.onReconnectEvent = (event) => {
+      if (cancelled) return;
+      if (event === "reconnecting") onError?.(new ConnectionError("Connection lost, reconnecting..."));
+      if (event === "reconnected") onConnected?.();
+      if (event === "failed") onError?.(new ConnectionError("Connection lost. Tap the device to retry."));
+    };
     streamingDeviceIdRef.current = deviceId;
     const client = new DeviceClient(rpcClient, deviceId);
     client.getDeviceInfo().then((result) => {

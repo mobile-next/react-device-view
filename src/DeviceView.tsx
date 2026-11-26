@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { DeviceViewProps, DeviceViewHandle, DeviceDescriptor, DevicePlatform, DeviceType, ScreenSize, ScreenCaptureFormat, StreamRenderMode } from './types';
+import { ConnectionError, DeviceViewProps, DeviceViewHandle, DeviceDescriptor, DevicePlatform, DeviceType, ScreenSize, ScreenCaptureFormat, StreamRenderMode } from './types';
 import { DeviceInstance, DeviceStreamHandle } from './DeviceInstance';
 import { DeviceState } from './DeviceViewport';
 import { DeviceSkin, getDeviceSkinForDevice, NoDeviceSkin } from './DeviceSkins';
-import { JsonRpcClient } from './rpc/JsonRpcClient';
+import { JsonRpcClient, ReconnectEvent } from './rpc/JsonRpcClient';
 import { DeviceClient, DeviceClientApi, createNoOpDeviceClient } from './rpc/DeviceClient';
 import { MjpegStream } from './streams/MjpegStream';
 import { AvcStream } from './streams/AvcStream';
@@ -105,7 +105,8 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
     onRotateDevice, onIncreaseVolume, onDecreaseVolume, onTakeScreenshot
   } = useDeviceInteraction({
     selectedDevice,
-    deviceClient: getDeviceClient()
+    deviceClient: getDeviceClient(),
+    onError,
   });
 
   useImperativeHandle(ref, () => ({
@@ -326,6 +327,14 @@ export const DeviceView = forwardRef<DeviceViewHandle, DeviceViewProps>(({
     // Create a fresh client for this effect — immune to StrictMode cleanup races
     const rpcClient = new JsonRpcClient(serverUrl, undefined, token);
     jsonRpcClientRef.current = rpcClient;
+
+    // The control socket dropped: tell the host, so it can say so instead of showing dead controls.
+    rpcClient.onReconnectEvent = (event: ReconnectEvent) => {
+      if (cancelled) return;
+      if (event === 'reconnecting') onError?.(new ConnectionError('Connection lost, reconnecting...'));
+      if (event === 'reconnected') onConnected?.();
+      if (event === 'failed') onError?.(new ConnectionError('Connection lost. Tap the device to retry.'));
+    };
     streamingDeviceIdRef.current = deviceId;
 
     const client = new DeviceClient(rpcClient, deviceId);
