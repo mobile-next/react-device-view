@@ -69,6 +69,14 @@ export function formatJsonRpcError(error: { message?: string; data?: unknown }):
 
 const CONNECTION_TIMEOUT_MS = 10000;
 
+// Reconnect attempts after the socket drops, waiting RECONNECT_DELAY_MS times the attempt number
+// between them (1s, 2s, ... 5s: about 15s in all) before giving up.
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_DELAY_MS = 1000;
+
+// What a viewer shows the user: the socket dropped and is being retried, came back, or gave up.
+export type ReconnectEvent = 'reconnecting' | 'reconnected' | 'failed';
+
 export class JsonRpcClient {
 
   private idCounter = 1;
@@ -76,12 +84,13 @@ export class JsonRpcClient {
   private wsState: ConnectionState = ConnectionState.DISCONNECTED;
   private pendingRequests = new Map<number, PendingRequest>();
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 0;
-  private reconnectDelay = 1000;
+  private isReconnecting = false;
+  private isClosedByCaller = false;
   private messageQueue: Array<{ method: string; params: any; id: number }> = [];
   private connectionListeners: Array<(state: ConnectionState) => void> = [];
   private logger: Logger;
   private sessionToken?: string;
+  public onReconnectEvent?: (event: ReconnectEvent) => void;
 
   constructor(public readonly url: string, logger?: Logger, private authToken?: string) {
     this.logger = logger || noopLogger;
@@ -285,29 +294,45 @@ export class JsonRpcClient {
       this.wsState = ConnectionState.DISCONNECTED;
       this.ws = null;
 
-      if (this.pendingRequests.size > 0 && this.reconnectAttempts < this.maxReconnectAttempts) {
-        this.attemptReconnect();
+      // An unexpected drop (proxy idle timeout, network blip): reconnect right away, so the next
+      // tap works instead of failing once and leaving the controls dead.
+      if (!this.isClosedByCaller && !this.isReconnecting) {
+        void this.reconnect();
       }
     }
   }
 
-  private async attemptReconnect(): Promise<void> {
-    this.reconnectAttempts++;
-    this.wsState = ConnectionState.RECONNECTING;
+  // Retries with a growing delay. Requests sent meanwhile wait in the queue and go out on the
+  // new socket; if every attempt fails they are rejected.
+  private async reconnect(): Promise<void> {
+    this.isReconnecting = true;
+    this.reconnectAttempts = 0;
+    this.onReconnectEvent?.('reconnecting');
 
-    this.logger.info(`attempting websocket reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+    while (this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      this.reconnectAttempts++;
+      this.logger.info(`attempting websocket reconnect (${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+      await new Promise(resolve => setTimeout(resolve, RECONNECT_DELAY_MS * this.reconnectAttempts));
+      if (this.isClosedByCaller) {
+        return;
+      }
 
-    await new Promise(resolve => setTimeout(resolve, this.reconnectDelay * this.reconnectAttempts));
-
-    try {
-      await this.connectWebSocket();
-    } catch {
-      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        this.logger.error('max reconnect attempts reached');
-        this.wsState = ConnectionState.FAILED;
-        this.failAllPendingRequests(new Error('WebSocket connection failed, please retry'));
+      try {
+        await this.connectWebSocket();
+        this.isReconnecting = false;
+        this.onReconnectEvent?.('reconnected');
+        return;
+      } catch {
+        // next attempt
       }
     }
+
+    this.logger.error('max reconnect attempts reached');
+    this.isReconnecting = false;
+    this.wsState = ConnectionState.FAILED;
+    this.messageQueue = [];
+    this.failAllPendingRequests(new ConnectionError('websocket connection lost'));
+    this.onReconnectEvent?.('failed');
   }
 
   private failAllPendingRequests(error: Error): void {
@@ -335,7 +360,10 @@ export class JsonRpcClient {
   }
 
   private async sendViaWebSocket<T>(method: string, params: any, timeoutMs?: number): Promise<T> {
-    await this.connectWebSocket();
+    // While reconnecting, the request is queued below and sent once the new socket opens.
+    if (!this.isReconnecting) {
+      await this.connectWebSocket();
+    }
 
     const id = this.idCounter++;
 
@@ -376,11 +404,17 @@ export class JsonRpcClient {
   };
 
   public get isDisconnected(): boolean {
+    if (this.isReconnecting) {
+      return false;
+    }
     return this.wsState === ConnectionState.DISCONNECTED || this.wsState === ConnectionState.FAILED;
   }
 
   public disconnect(): void {
+    this.isClosedByCaller = true;
+    this.isReconnecting = false;
     if (this.ws) {
+      this.ws.onclose = null;
       this.ws.close();
       this.ws = null;
     }

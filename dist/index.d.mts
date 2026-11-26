@@ -190,6 +190,7 @@ interface Logger {
     warn(message: string): void;
     error(message: string, error?: Error): void;
 }
+type ReconnectEvent = 'reconnecting' | 'reconnected' | 'failed';
 declare class JsonRpcClient {
     readonly url: string;
     private authToken?;
@@ -198,12 +199,13 @@ declare class JsonRpcClient {
     private wsState;
     private pendingRequests;
     private reconnectAttempts;
-    private maxReconnectAttempts;
-    private reconnectDelay;
+    private isReconnecting;
+    private isClosedByCaller;
     private messageQueue;
     private connectionListeners;
     private logger;
     private sessionToken?;
+    onReconnectEvent?: (event: ReconnectEvent) => void;
     constructor(url: string, logger?: Logger, authToken?: string | undefined);
     private exchangeTokenForSession;
     private getWebSocketUrl;
@@ -217,7 +219,7 @@ declare class JsonRpcClient {
     private handleWebSocketMessage;
     private handleWebSocketError;
     private handleWebSocketClose;
-    private attemptReconnect;
+    private reconnect;
     private failAllPendingRequests;
     private flushMessageQueue;
     private sendViaWebSocket;
